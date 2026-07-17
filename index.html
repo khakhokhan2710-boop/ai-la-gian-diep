@@ -367,7 +367,19 @@ function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
   roomRef.child('cardsSeen/'+myId).set(true);
   roomRef.child('currentTurn').set((gs.currentTurn||0)+1);
-  // Wait for Firebase to sync, then re-render drawing
+  // Check if all done -> set phase immediately
+  var to=gs.turnOrder||[];
+  var seen=gs.cardsSeen||{};
+  var allDone=true;
+  for(var i=0;i<to.length;i++){if(!seen[to[i]]){allDone=false;break}}
+  // Also count current one
+  var afterSeen=(gs.cardsSeen||{});
+  afterSeen[myId]=true;
+  var allDone2=true;
+  for(var i=0;i<to.length;i++){if(!afterSeen[to[i]]){allDone2=false;break}}
+  if(allDone2 && chuPhong) {
+    roomRef.child('phase').set('draw_done');
+  }
   setTimeout(function(){xuLyRutBai();},300);
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
