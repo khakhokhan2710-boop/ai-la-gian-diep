@@ -221,10 +221,54 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
 .flex-1{flex:1}.mt-a{margin-top:auto}.tc{text-align:center}.mb8{margin-bottom:8px}
 
 /* === CHAT === */
-.chat-msg{display:flex;align-items:flex-start;gap:8px;padding:6px 0;animation:fadeIn 0.2s ease}
-.chat-msg .who{font-size:11px;color:#818cf8;font-weight:700;min-width:40px;text-align:right}
-.chat-msg .txt{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:8px 12px;font-size:14px;color:#ddd;max-width:80%;word-break:break-word}
-.chat-msg.me .txt{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.25);color:#c4b5fd}
+#chatBox{padding:4px 0;display:flex;flex-direction:column;gap:6px}
+.chat-msg{display:flex;align-items:flex-end;gap:6px;animation:chatPop 0.25s cubic-bezier(0.2,0.8,0.3,1.2)}
+@keyframes chatPop{from{opacity:0;transform:translateY(8px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.chat-msg .who{font-size:10px;color:#8b8ba0;font-weight:600;min-width:36px;text-align:right;margin-bottom:2px}
+.chat-msg .txt{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
+  border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:14px;color:#ccc;
+  max-width:78%;line-height:1.4;position:relative;
+}
+.chat-msg.me{flex-direction:row-reverse}
+.chat-msg.me .who{text-align:left;color:#a78bfa}
+.chat-msg.me .txt{
+  background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1));
+  border-color:rgba(99,102,241,0.3);color:#e0d5ff;border-radius:18px 18px 4px 18px;
+}
+.chat-msg:last-child .txt{animation:lastMsgGlow 0.5s ease-out}
+@keyframes lastMsgGlow{0%{box-shadow:0 0 20px rgba(99,102,241,0.3)}100%{box-shadow:none}}
+
+/* === VOTE ITEMS === */
+.vote-item{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:rgba(255,255,255,0.02);border:1.5px solid rgba(255,255,255,0.06);
+  border-radius:14px;padding:14px 16px;margin-bottom:8px;
+  transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+  position:relative;overflow:hidden;
+}
+.vote-item:hover{border-color:rgba(99,102,241,0.2);background:rgba(99,102,241,0.03)}
+.vote-item.selected{
+  border-color:#818cf8!important;background:rgba(99,102,241,0.08)!important;
+  box-shadow:0 0 24px rgba(99,102,241,0.15),inset 0 0 20px rgba(99,102,241,0.03);
+  animation:votePulse 1.5s ease-in-out infinite;
+}
+@keyframes votePulse{0%,100%{box-shadow:0 0 24px rgba(99,102,241,0.15)}50%{box-shadow:0 0 40px rgba(139,92,246,0.3)}}
+.vote-item .v-name{flex:1;font-weight:600;font-size:16px}
+.vote-item .v-count{font-size:13px;color:#666;min-width:40px;text-align:right}
+.vote-item .v-check{
+  width:24px;height:24px;border-radius:50%;border:2px solid #444;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.3s ease;
+}
+.vote-item.selected .v-check{
+  border-color:#818cf8;background:#818cf8;
+  animation:checkBounce 0.4s cubic-bezier(0.2,0.8,0.3,1.2);
+}
+@keyframes checkBounce{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.vote-item.selected .v-check::after{content:'✓';color:#fff;font-size:13px;font-weight:800}
+.vote-item.selected .v-name{color:#c4b5fd}
+.vote-item.selected .v-count{color:#818cf8;font-weight:700}
 
 /* === SCROLLBAR === */
 ::-webkit-scrollbar{width:4px}
@@ -781,15 +825,16 @@ function xuLyVote(){
     var vf=0, aiVote=[];
     for(var vk in v){if(v[vk]===pid){vf++;aiVote.push(g.players[vk]?g.players[vk].name:'?')}}
     var d=document.createElement('div');
-    d.style.cssText='display:flex;align-items:center;gap:8px;background:#141414;border:1px solid #222;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer';
-    d.innerHTML='<span style="flex:1;font-weight:600">'+esc(p.name)+'</span>'+
-      '<span style="font-size:11px;color:#666;text-align:right">'+
-      (vf>0?'<span style="color:#ef4444;font-weight:700">'+vf+' phiếu</span>':'<span style="color:#444">0</span>')+
-      '</span><span style="width:20px;height:20px;border-radius:50%;border:2px solid #444;flex-shrink:0"></span>';
+    d.className = 'vote-item';
+    d.setAttribute('data-pid', pid);
+    d.innerHTML =
+      '<span class="v-name">'+esc(p.name)+'</span>' +
+      '<span class="v-count">'+(vf>0?'<b>'+vf+'</b> phiếu':'0')+'</span>' +
+      '<span class="v-check"></span>';
     (function(p2){d.onclick=function(){
       if(v[myId]) return;
-      var sl=document.querySelectorAll('#voteList > div');for(var x=0;x<sl.length;x++)sl[x].style.borderColor='#222';
-      this.style.borderColor='#6366f1';binhChon=p2;document.getElementById('voteBtn').disabled=false;
+      var sl=document.querySelectorAll('.vote-item');for(var x=0;x<sl.length;x++)sl[x].classList.remove('selected');
+      this.classList.add('selected');binhChon=p2;document.getElementById('voteBtn').disabled=false;
     }})(pid);
     list.appendChild(d);
   }
