@@ -359,24 +359,38 @@ function xuLyRutBai() {
 
 function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
-  // Write to Firebase
   roomRef.child('cardsSeen/'+myId).set(true);
-  // Read current turn from Firebase, increment, and write back
   roomRef.child('currentTurn').once('value').then(function(snap){
     var cur = snap.val() || 0;
-    roomRef.child('currentTurn').set(cur + 1);
-    // After advancing, re-read and check if all done
-    roomRef.once('value').then(function(snap2){
-      gs = snap2.val();
-      var to = gs.turnOrder || [];
-      var seen = gs.cardsSeen || {};
-      var allDone = true;
-      for(var i=0;i<to.length;i++){if(!seen[to[i]]){allDone=false;break}}
-      if(allDone) {
-        roomRef.child('phase').set('draw_done');
-      }
-      xuLyRutBai();
-    });
+    var newTurn = cur + 1;
+    var to = gs.turnOrder || [];
+    // Check now: if current cardsSeen (excluding this one) + this = all?
+    var curSeen = gs.cardsSeen || {};
+    var countSeen = 0;
+    for(var k in curSeen) { if(curSeen[k]) countSeen++; }
+    // This player hasn't been counted yet
+    if(countSeen + 1 >= to.length) {
+      // Set phase NOW, before incrementing turn
+      roomRef.update({currentTurn: newTurn, phase: 'draw_done'});
+    } else {
+      roomRef.update({currentTurn: newTurn});
+    }
+    // Re-read from Firebase and update UI
+    var checkCount = 0;
+    var interval = setInterval(function() {
+      roomRef.once('value').then(function(s2){
+        gs = s2.val();
+        checkCount++;
+        if(gs.status === 'phase' || gs.phase === 'draw_done' || checkCount > 5) {
+          clearInterval(interval);
+          if(gs.status === 'phase' || gs.phase === 'draw_done') {
+            xuLyPhase();
+          } else {
+            xuLyRutBai();
+          }
+        }
+      });
+    }, 500);
   });
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
