@@ -105,9 +105,14 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
 <!-- Waiting with timer -->
 <div class="s tc" id="s3">
  <div class="flex-1"></div>
+ <div id="nameCardArea" style="display:none;margin-bottom:16px">
+  <div style="font-size:12px;color:#666;margin-bottom:4px">🔊 Đang nói:</div>
+  <div id="currentSpeaker" style="font-size:28px;font-weight:900;padding:16px 24px;background:#1a1a1a;border:1px solid #333;border-radius:16px;display:inline-block">—</div>
+  <div style="font-size:12px;color:#555;margin-top:8px">Thứ tự: <span id="speakerOrder">1</span>/<span id="speakerTotal">2</span></div>
+ </div>
  <h3 id="waitTitle">⏳ Đang chờ...</h3>
  <p class="p" id="waitSub">...</p>
- <div id="timerArea" style="font-size:48px;font-weight:900;margin:16px 0;color:#818cf8;display:none">0:05</div>
+ <div id="timerArea" style="font-size:48px;font-weight:900;margin:16px 0;color:#818cf8;display:none">3:00</div>
  <p id="timerLabel" style="color:#555;font-size:13px;display:none">Thời gian nói chuyện</p>
  <button class="btn pri" id="waitBtn" style="display:none" onclick="waitAction()">Tiếp</button>
  <button class="btn sec" id="skipBtn" style="display:none" onclick="skipVote()">⏩ Bỏ qua → Vote</button>
@@ -401,27 +406,7 @@ function xuLyPhase(){
   hien('s3');
   if(g.voteTime) {
     // Timer đã chạy - sync từ Firebase
-    var endTime = g.voteTime;
-    document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
-    document.getElementById('waitSub').textContent='Mở vote sau 3 phút';
-    document.getElementById('timerArea').style.display='block';
-    document.getElementById('timerLabel').style.display='block';
-    document.getElementById('waitBtn').style.display='none';
-    document.getElementById('skipBtn').style.display='none';
-    if(timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(function(){
-      var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-      var m = Math.floor(remaining/60);
-      var s = remaining%60;
-      document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-      if(chuPhong && remaining > 0) {
-        document.getElementById('skipBtn').style.display='block';
-      }
-      if(remaining <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-    }, 1000);
+    syncTimer(g.voteTime);
   } else if(chuPhong) {
     // Host thấy nút bắt đầu
     document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
@@ -430,6 +415,7 @@ function xuLyPhase(){
     document.getElementById('waitBtn').textContent='⏱️ Bắt đầu 3 phút';
     document.getElementById('timerArea').style.display='none';
     document.getElementById('timerLabel').style.display='none';
+    document.getElementById('nameCardArea').style.display='none';
   } else {
     // Player chờ host
     document.getElementById('waitTitle').textContent='📋 Đã rút xong!';
@@ -437,30 +423,86 @@ function xuLyPhase(){
     document.getElementById('waitBtn').style.display='none';
     document.getElementById('timerArea').style.display='none';
     document.getElementById('timerLabel').style.display='none';
+    document.getElementById('nameCardArea').style.display='none';
   }
 }
 var timerInterval = null;
 function batDauDem(){
   if(timerInterval) clearInterval(timerInterval);
-  // Save end time to Firebase so all players sync
-  var endTime = Date.now() + 5000; // 5 seconds for fast test
+  var to = gs.turnOrder || [];
+  document.getElementById('nameCardArea').style.display='block';
+  document.getElementById('speakerTotal').textContent = to.length;
+  showNextSpeaker(0);
+  
+  var endTime = Date.now() + 180000;
   roomRef.child('voteTime').set(endTime).then(function(){
     document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
-    document.getElementById('waitSub').textContent='Mở vote sau 3 phút';
+    document.getElementById('waitSub').textContent='3 phút nói chuyện';
     document.getElementById('timerArea').style.display='block';
     document.getElementById('timerLabel').style.display='block';
+    document.getElementById('waitBtn').style.display='none';
+    document.getElementById('skipBtn').style.display='block';
+    document.getElementById('skipBtn').textContent='⏩ Bỏ qua → Vote';
+    var speakerIdx = 0;
     timerInterval = setInterval(function(){
       var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       var m = Math.floor(remaining/60);
       var s = remaining%60;
       document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-      if(remaining <= 0 || document.getElementById('waitBtn').style.display==='block') {
+      var newIdx = Math.floor((180000 - remaining*1000) / 15000);
+      if(newIdx !== speakerIdx && newIdx < to.length) {
+        speakerIdx = newIdx;
+        showNextSpeaker(speakerIdx);
+      }
+      if(remaining <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
-        if(remaining <= 0) roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+        document.getElementById('nameCardArea').style.display='none';
+        roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
       }
     }, 1000);
   });
+}
+function showNextSpeaker(idx) {
+  var to = (gs.turnOrder || []);
+  var pl = (gs.players || {});
+  if(idx < to.length) {
+    var pid = to[idx];
+    var name = (pl[pid] && pl[pid].name) || '—';
+    document.getElementById('currentSpeaker').textContent = name;
+    document.getElementById('speakerOrder').textContent = idx + 1;
+  }
+}
+function syncTimer(endTime) {
+  document.getElementById('nameCardArea').style.display='block';
+  document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
+  document.getElementById('waitSub').textContent='3 phút';
+  document.getElementById('timerArea').style.display='block';
+  document.getElementById('timerLabel').style.display='block';
+  document.getElementById('waitBtn').style.display='none';
+  document.getElementById('skipBtn').style.display='none';
+  var to = gs.turnOrder || [];
+  document.getElementById('speakerTotal').textContent = to.length;
+  if(timerInterval) clearInterval(timerInterval);
+  var speakerIdx = 0;
+  showNextSpeaker(0);
+  timerInterval = setInterval(function(){
+    var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    var m = Math.floor(remaining/60);
+    var s = remaining%60;
+    document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
+    var newIdx = Math.floor((endTime - Date.now()) / 15000);
+    if(newIdx !== speakerIdx && newIdx < to.length && newIdx >= 0) {
+      speakerIdx = newIdx;
+      showNextSpeaker(speakerIdx);
+    }
+    if(remaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('nameCardArea').style.display='none';
+      roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+    }
+  }, 1000);
 }
 function waitAction(){
   if(!chuPhong) return;
