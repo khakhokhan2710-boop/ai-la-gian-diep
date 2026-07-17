@@ -548,24 +548,20 @@ function tinhLoai(g){
   var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
   if(ties.length>1){
     alert('Hòa! Vote lại.');
-    if(chuPhong) roomRef.update({votes:{}});
+    roomRef.child('votes').set({});
     return;
   }
-  var role=(g.assignments[el]&&g.assignments[el].role)||'unknown';
-  // Build eliminated object explicitly (no deep path syntax)
+  var a = g.assignments || {};
+  var role = (a[el] && a[el].role) || 'unknown';
   var elim = g.eliminated || {};
   elim[el] = true;
+  // Just write — listeners on all devices will pick up the change
   roomRef.update({
     eliminated: elim,
     status: 'result',
     lastEliminated: el,
     lastRole: role
-  }).then(function(){
-    // Force re-read to ensure UI updates
-    roomRef.once('value').then(function(snap){
-      if(snap.exists()) { gs = snap.val(); capNhatGame(); }
-    });
-  }).catch(function(err){alert('Lỗi vote: '+err.message)});
+  }).catch(function(err){alert('Lỗi: '+err.message)});
 }
 
 function xuLyKetQua(){
