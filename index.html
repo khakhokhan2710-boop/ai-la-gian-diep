@@ -1123,13 +1123,13 @@ function determineElimination(g) {
 }
 
 function updateElimination(g, eliminatedPid) {
-  const role = g.assignments[eliminatedPid]?.role || 'unknown';
-  roomRef.update({
-    'eliminated/' + eliminatedPid: true,
-    status: 'result',
-    lastEliminated: eliminatedPid,
-    lastRole: role,
-  });
+  const role = (g.assignments[eliminatedPid] && g.assignments[eliminatedPid].role) || 'unknown';
+  var updateData = {};
+  updateData['eliminated/' + eliminatedPid] = true;
+  updateData.status = 'result';
+  updateData.lastEliminated = eliminatedPid;
+  updateData.lastRole = role;
+  roomRef.update(updateData);
 }
 
 // === RESULT ===
@@ -1173,7 +1173,9 @@ function resultNext() {
   const g = gameState;
   // Check win conditions
   const alive = getAlivePlayers(g);
-  const aliveAssigns = alive.map(pid => g.assignments[pid]?.role);
+  var aliveAssigns = alive.map(function(pid) {
+    return g.assignments[pid] ? g.assignments[pid].role : null;
+  });
   const aliveSpies = aliveAssigns.filter(r => r === 'spy').length;
   const aliveCivilians = aliveAssigns.filter(r => r === 'civilian').length;
   const initialCivilians = Object.values(g.assignments||{}).filter(a => a.role === 'civilian').length;
@@ -1281,11 +1283,13 @@ function resetToLobby() {
 
 // Listen for draw completion (host observing)
 // Check periodically if all cards seen
-setInterval(() => {
+setInterval(function() {
   if(!isHost || !roomRef) return;
-  const g = gameState;
+  var g = gameState;
   if(!g || g.status !== 'drawing') return;
-  const allSeen = (g.turnOrder||[]).every(pid => g.cardsSeen && g.cardsSeen[pid]);
+  var allSeen = (g.turnOrder||[]).every(function(pid) {
+    return g.cardsSeen && g.cardsSeen[pid];
+  });
   if(allSeen && g.currentTurn >= (g.turnOrder||[]).length) {
     roomRef.child('phase').set('draw_done');
   }
