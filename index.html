@@ -359,7 +359,10 @@ function xuLyRutBai() {
 }
 
 function latBai(){document.getElementById('cardIn').classList.add('f')}
-function daXong(e){e.stopPropagation();roomRef.child('cardsSeen/'+myId).set(true);hien('s3');
+function daXong(e){e.stopPropagation();
+  roomRef.child('cardsSeen/'+myId).set(true);
+  roomRef.child('currentTurn').set((gs.currentTurn||0)+1);
+  hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
 
 // PHASE
