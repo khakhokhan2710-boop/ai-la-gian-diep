@@ -610,15 +610,16 @@ function randPair() {
 }
 
 // === STATE ===
-let myId = null;
-let myName = '';
-let myRole = null; // 'host' | 'player'
-let roomRef = null;
-let roomCode = '';
-let gameState = {}; // cached from firebase
-let selectedVote = null;
-let isHost = false;
-let cardsFlipped = {}; // track who flipped
+var myId = null;
+var myName = '';
+var myRole = null; // 'host' | 'player'
+var roomRef = null;
+var roomCode = '';
+var gameState = {}; // cached from firebase
+var selectedVote = null;
+var isHost = false;
+var hostedSetupReady = false;
+var cardsFlipped = {}; // track who flipped
 
 // === HELPERS ===
 function randId() {
@@ -648,7 +649,7 @@ function shuffle(arr) {
 // === LOBBY ===
 function createRoom() {
   console.log('createRoom called');
-  const name = (document.getElementById('nameInputMain').value || '').trim();
+  var name = (document.getElementById('nameInputMain').value || '').trim();
   if(!name) { alert('Nhập tên của bạn!'); return; }
   console.log('name:', name);
   myName = name;
@@ -656,38 +657,40 @@ function createRoom() {
   roomCode = roomCodeGen();
   roomRef = db.ref('rooms/' + roomCode);
 
-  const pair = randPair();
+  var pair = randPair();
   console.log('pair chosen:', pair);
 
-  const data = {
-    host: myId,
-    hostName: name,
-    players: { [myId]: { name: name, joined: true } },
-    status: 'setup',
-    total: 8,
-    spies: 2,
-    whiteHats: 2,
-    pair: pair,
-    round: 0,
-    eliminated: {},
-    phase: 'wait',
-    turnOrder: [],
-    currentTurn: -1,
-    cardsSeen: {},
-    votes: {},
-    hostVotePass: false,
-  };
+  var data = new Object();
+  data.host = myId;
+  data.hostName = name;
+  data.players = new Object();
+  data.players[myId] = { name: name, joined: true };
+  data.status = 'setup';
+  data.total = 8;
+  data.spies = 2;
+  data.whiteHats = 2;
+  data.pair = pair;
+  data.round = 0;
+  data.eliminated = new Object();
+  data.phase = 'wait';
+  data.turnOrder = [];
+  data.currentTurn = -1;
+  data.cardsSeen = new Object();
+  data.votes = new Object();
+  data.hostVotePass = false;
+  
   console.log('writing to firebase:', roomCode);
 
-  roomRef.set(data).then(() => {
+  roomRef.set(data).then(function() {
     console.log('firebase write success');
     isHost = true;
     myRole = 'host';
     listenRoom();
     document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
+    hostedSetupReady = true;
     updateSetupUI();
     showScreen('screen-setup');
-  }).catch(err => {
+  }).catch(function(err) {
     console.error('firebase error:', err);
     alert('Lỗi kết nối Firebase: ' + err.message);
   });
@@ -719,10 +722,10 @@ function joinRoom() {
 }
 
 // === ROOM LISTENER ===
-let roomListener = null;
+var roomListener = null;
 function listenRoom() {
   if(roomListener) roomRef.off('value', roomListener);
-  roomListener = roomRef.on('value', snap => {
+  roomListener = roomRef.on('value', function(snap) {
     if(!snap.exists()) { /* room deleted */ return; }
     gameState = snap.val();
     onRoomUpdate();
@@ -735,7 +738,9 @@ function onRoomUpdate() {
 
   switch(g.status) {
     case 'setup':
-      if(isHost) { updateSetupUI(); showScreen('screen-setup'); }
+      if(isHost) {
+        if(!hostedSetupReady) { hostedSetupReady = true; updateSetupUI(); showScreen('screen-setup'); }
+      }
       else {
         // show waiting in nameinput or waiting-screen
         const players = Object.values(g.players||{});
