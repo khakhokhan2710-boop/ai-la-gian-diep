@@ -810,10 +810,14 @@ function esc(s) { return (s||'').replace(/[&<>]/g,''); }
 
 // === SETUP (host only) ===
 function updateSetupUI() {
-  document.getElementById('totalNum').textContent = gameState.total;
-  document.getElementById('civilianCount').textContent = gameState.total - gameState.spies - gameState.whiteHats;
-  document.getElementById('spyCountDisp').textContent = gameState.spies;
-  document.getElementById('whiteHatCountDisp').textContent = gameState.whiteHats;
+  if(!gameState) return;
+  var total = gameState.total || 0;
+  var spies = gameState.spies || 0;
+  var wh = gameState.whiteHats || 0;
+  document.getElementById('totalNum').textContent = total;
+  document.getElementById('civilianCount').textContent = total - spies - wh;
+  document.getElementById('spyCountDisp').textContent = spies;
+  document.getElementById('whiteHatCountDisp').textContent = wh;
   document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
 }
 
