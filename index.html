@@ -358,9 +358,11 @@ function xuLyRutBai() {
     document.getElementById('cardIn').classList.remove('f');
     document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length;
     hien('s2');
+    console.log('SHOW CARD for', myName, 'role:', a.role);
+  } else if(daXem) {
+    hien('s3'); document.getElementById('waitTitle').textContent='✅ Đã xem rồi!';document.getElementById('waitSub').textContent='Chờ...';
   } else {
-    hien('s3'); document.getElementById('waitTitle').textContent='⏳ Đang rút bài...';
-    document.getElementById('waitSub').textContent=idx+'/'+to.length;
+    hien('s3'); document.getElementById('waitTitle').textContent='⏳ Đang rút bài...';document.getElementById('waitSub').textContent=(idx+1)+'/'+to.length+' - lượt người số '+(idx+1);
   }
 }
 
@@ -368,6 +370,8 @@ function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
   roomRef.child('cardsSeen/'+myId).set(true);
   roomRef.child('currentTurn').set((gs.currentTurn||0)+1);
+  // Wait for Firebase to sync, then re-render drawing
+  setTimeout(function(){xuLyRutBai();},300);
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
 
