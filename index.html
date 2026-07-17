@@ -618,7 +618,7 @@ function batDauDem(){
   showNextSpeaker(0);
   
   var endTime = Date.now() + 180000;
-  roomRef.child('voteTime').set(endTime).then(function(){
+  roomRef.update({voteTime:endTime,currentSpeakerIdx:0}).then(function(){
     document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
     document.getElementById('waitSub').textContent='3 phút nói chuyện';
     document.getElementById('timerArea').style.display='block';
@@ -631,9 +631,10 @@ function batDauDem(){
       var m = Math.floor(remaining/60);
       var s = remaining%60;
       document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-      var newIdx = Math.floor((180000 - remaining*1000) / 15000);
-      if(newIdx !== speakerIdx && newIdx < to.length) {
-        speakerIdx = newIdx;
+      // Speaker is now message-driven, not time-based
+      var csIdx = gs.currentSpeakerIdx || 0;
+      if(csIdx !== speakerIdx && csIdx < to.length) {
+        speakerIdx = csIdx;
         showNextSpeaker(speakerIdx);
       }
       if(remaining <= 0) {
@@ -669,12 +670,24 @@ function themChat(who, text, isMe){
 function guiChat(){
   var text = document.getElementById('chatInput').value.trim();
   if(!text) return;
+  // Check not typing secret word
+  var myAssign = gs.assignments && gs.assignments[myId];
+  if(myAssign && myAssign.word && text.toLowerCase().indexOf(myAssign.word.toLowerCase())!==-1) {
+    alert('Không được nhắn từ bí mật của bạn! Hãy dùng từ khác.');
+    return;
+  }
   // Only current speaker can chat
-  if(myId !== currentSpeakerPid && !chuPhong) {
-    alert('Chưa tới lượt bạn nói!'); return;
+  if(myId !== currentSpeakerPid) {
+    alert('Chưa tới lượt bạn nói! Chat để tôi chuyển lượt.'); return;
   }
   roomRef.child('chat').push({from: myId, text: text, time: Date.now()});
   document.getElementById('chatInput').value = '';
+  // Advance to next speaker
+  var to = gs.turnOrder || [];
+  var curIdx = gs.currentSpeakerIdx || 0;
+  var nextIdx = curIdx + 1;
+  if(nextIdx >= to.length) nextIdx = 0;
+  roomRef.child('currentSpeakerIdx').set(nextIdx);
 }
 function showSpeaker(id){
   currentSpeakerPid = id;
@@ -727,9 +740,10 @@ function syncTimer(endTime) {
     var m = Math.floor(remaining/60);
     var s = remaining%60;
     document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-    var newIdx = Math.floor((endTime - Date.now()) / 15000);
-    if(newIdx !== speakerIdx && newIdx < to.length && newIdx >= 0) {
-      speakerIdx = newIdx;
+    // Speaker is now message-driven
+    var csIdx = gs.currentSpeakerIdx || 0;
+    if(csIdx !== speakerIdx && csIdx < to.length) {
+      speakerIdx = csIdx;
       showNextSpeaker(speakerIdx);
     }
     if(remaining <= 0) {
