@@ -480,7 +480,8 @@ function syncTimer(endTime) {
   document.getElementById('timerArea').style.display='block';
   document.getElementById('timerLabel').style.display='block';
   document.getElementById('waitBtn').style.display='none';
-  document.getElementById('skipBtn').style.display='none';
+  document.getElementById('skipBtn').style.display='block';
+  document.getElementById('skipBtn').textContent='⏩ Bỏ qua → Vote (chủ phòng)';
   var to = gs.turnOrder || [];
   document.getElementById('speakerTotal').textContent = to.length;
   if(timerInterval) clearInterval(timerInterval);
