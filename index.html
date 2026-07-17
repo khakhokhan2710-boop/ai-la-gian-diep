@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🕵️ Ai Là Gián Điệp</title>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0a0a0a;
+  color: #f5f5f5;
+  min-height: 100vh;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 3D Parallax Background */
+.bg-3d {
+  position: fixed;
+  inset: -40px;
+  z-index: 0;
+  overflow: hidden;
+  perspective: 1200px;
+}
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #0a0a0a 60%);
+  transform: rotateX(6deg) translateZ(-20px);
+  transform-origin: center top;
+  transition: transform 0.3s cubic-bezier(.1,.7,.3,1);
+}
+.bg-layer-2 {
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 40px,
+    rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px
+  );
+  transform: rotateX(6deg) translateZ(-10px);
+}
+.bg-orbe {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+.bg-orbe:nth-child(1) {
+  width: 400px; height: 400px;
+  background: #6366f1;
+  top: -100px; left: -100px;
+  animation-delay: 0s;
+}
+.bg-orbe:nth-child(2) {
+  width: 300px; height: 300px;
+  background: #8b5cf6;
+  bottom: -50px; right: -50px;
+  animation-delay: -3s;
+}
+.bg-orbe:nth-child(3) {
+  width: 250px; height: 250px;
+  background: #a78bfa;
+  top: 50%; left: 50%;
+  animation-delay: -5s;
+}
+@keyframes orbFloat {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(30px,-30px) scale(1.15); }
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* === SCREENS === */
+.screen { display: none; flex-direction: column; height: 100%; }
+.screen.active { display: flex; }
+
+/* LOBBY */
+.lobby { justify-content: center; align-items: center; gap: 28px; text-align: center; }
+.lobby h1 {
+  font-size: 32px; font-weight: 900; letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #c084fc, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1.15;
+}
+.lobby .sub { font-size: 15px; color: #666; margin-top: 4px; }
+.lobby .join-section {
+  width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.lobby input, .lobby .btn {
+  width: 100%; padding: 16px; border-radius: 14px;
+  font-family: inherit; font-size: 16px;
+  background: #1a1a1a; color: #f5f5f5; border: 1px solid #222;
+  text-align: center; font-weight: 600;
+  outline: none; transition: 0.15s;
+}
+.lobby input:focus { border-color: #6366f1; }
+.lobby .btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; cursor: pointer; font-weight: 700;
+  padding: 16px;
+}
+.lobby .btn:active { transform: scale(0.97); opacity: 0.9; }
+.lobby .or-divider { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #444; }
+.lobby .or-divider::before, .lobby .or-divider::after {
+  content: ''; flex: 1; height: 1px; background: #222;
+}
+.lobby .room-input-group { display: flex; gap: 10px; }
+.lobby .room-input-group input { flex: 1; }
+.lobby .room-input-group .btn {
+  flex: none; width: auto; padding: 16px 20px;
+  background: transparent; border: 1px solid #444; color: #999; font-weight: 500;
+}
+
+/* SETUP */
+.setup { gap: 20px; padding-top: 20px; }
+.setup h2 { font-size: 24px; font-weight: 800; }
+.setup .player-count {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  margin: 8px 0;
+}
+.setup .player-count .num {
+  font-size: 48px; font-weight: 900;
+  min-width: 60px; text-align: center;
+  color: #f5f5f5;
+}
+.setup .player-count .adj {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #1a1a1a; border: 1px solid #333;
+  color: #f5f5f5; font-size: 24px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.12s;
+}
+.setup .player-count .adj:active { background: #333; transform: scale(0.92); }
+.setup .role-slots {
+  display: flex; gap: 12px; justify-content: center;
+}
+.setup .role-slot {
+  background: #141414; border: 1px solid #222; border-radius: 14px;
+  padding: 14px 16px; text-align: center; flex: 1; min-width: 0;
+}
+.setup .role-slot .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.setup .role-slot .count { font-size: 20px; font-weight: 700; }
+.setup .role-slot .adj-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.setup .role-slot .adj-group .adj {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: transparent; border: 1px solid #333;
+  color: #f5f5f5; font-size: 16px; cursor: pointer;
+}
+.setup .role-slot .adj-group .adj:active { background: #222; }
+.setup .start-btn {
+  margin-top: auto; margin-bottom: 20px;
+  width: 100%; padding: 18px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 16px;
+  font-family: inherit; font-size: 18px; font-weight: 700;
+  cursor: pointer; transition: 0.15s;
+}
+.setup .start-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+/* NAME INPUT */
+.name-input { justify-content: center; align-items: center; gap: 20px; text-align: center; }
+.name-input h3 { font-size: 20px; font-weight: 700; }
+.name-input .sub { color: #666; font-size: 14px; margin-bottom: 4px; }
+.name-input .player-list {
+  width: 100%; max-width: 320px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  margin: 4px 0;
+}
+.name-input .player-chip {
+  padding: 6px 14px; background: #1a1a1a; border-radius: 20px; font-size: 13px; color: #999; font-weight: 500;
+}
+.name-input input {
+  width: 100%; max-width: 320px; padding: 16px; border-radius: 14px;
+  font-family: inherit; font-size: 16px;
+  background: #1a1a1a; color: #f5f5f5; border: 1px solid #333;
+  text-align: center; font-weight: 600; outline: none;
+}
+.name-input input:focus { border-color: #6366f1; }
+.name-input .btn {
+  width: 100%; max-width: 320px; padding: 16px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 14px;
+  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.name-input .btn:active { transform: scale(0.97); }
+
+/* 3D CARD */
+.card-screen { justify-content: center; align-items: center; }
+.card-3d {
+  width: 280px; height: 400px;
+  perspective: 1000px;
+  margin-bottom: 20px;
+}
+.card-inner {
+  position: relative; width: 100%; height: 100%;
+  transition: transform 1s cubic-bezier(0.2,0.8,0.3,1);
+  transform-style: preserve-3d;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; inset: 0;
+  border-radius: 24px;
+  backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 20px;
+  box-shadow: 0 20px 60px rgba(99,102,241,0.2);
+}
+.card-back {
+  background: linear-gradient(135deg, #1e1b4b, #0f172a);
+  border: 1.5px solid rgba(99,102,241,0.3);
+}
+.card-back .logo {
+  font-size: 64px; margin-bottom: 12px;
+  text-shadow: 0 0 40px rgba(99,102,241,0.4);
+}
+.card-back .tap-text { font-size: 14px; color: #666; font-weight: 500; }
+.card-front {
+  background: linear-gradient(135deg, #141414, #1a1a1a);
+  border: 1.5px solid #333;
+  transform: rotateY(180deg);
+  gap: 8px;
+}
+.card-front .role-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #555; font-weight: 600;
+}
+.card-front .role-name {
+  font-size: 40px; font-weight: 900; letter-spacing: -0.02em;
+}
+.card-front .role-name.spy { color: #ef4444; }
+.card-front .role-name.civilian { color: #22c55e; }
+.card-front .role-name.white-hat { color: #818cf8; }
+.card-front .secret-word {
+  margin-top: 4px;
+  font-size: 28px; font-weight: 800;
+  padding: 12px 24px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  letter-spacing: 0.02em;
+}
+.card-front .hint-text {
+  font-size: 13px; color: #555;
+  max-width: 200px; text-align: center; line-height: 1.4;
+}
+.card-front .done-btn {
+  margin-top: 12px;
+  padding: 12px 32px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: #999;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+.card-front .done-btn:active { background: #222; color: #f5f5f5; }
+.card-seq { font-size: 13px; color: #555; }
+.card-seq strong { color: #999; }
+.player-name-tag {
+  font-size: 15px; color: #888; font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* WAITING */
+.waiting-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
+.waiting-screen h3 { font-size: 20px; font-weight: 700; }
+.waiting-screen .sub { color: #666; font-size: 14px; }
+.waiting-screen .btn {
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 14px;
+  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.waiting-screen .btn:active { transform: scale(0.97); }
+
+/* VOTING */
+.vote-screen { gap: 16px; padding-top: 12px; }
+.vote-screen .phase-tag {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #555; font-weight: 600; text-align: center;
+}
+.vote-screen .round-info {
+  text-align: center; font-size: 18px; font-weight: 700;
+}
+.vote-screen .player-votes {
+  display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  flex: 1;
+}
+.vote-player {
+  display: flex; align-items: center; gap: 12px;
+  background: #141414; border: 1px solid #222;
+  border-radius: 14px; padding: 14px 16px;
+  cursor: pointer; transition: 0.12s;
+}
+.vote-player:active { background: #1a1a1a; transform: scale(0.98); }
+.vote-player.selected { border-color: #6366f1; background: #1a1a2e; }
+.vote-player .name { flex: 1; font-weight: 600; font-size: 16px; }
+.vote-player .votes-count { font-size: 13px; color: #666; }
+.vote-player .checkbox {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid #444; display: flex; align-items: center; justify-content: center;
+  transition: 0.12s; flex-shrink: 0;
+}
+.vote-player.selected .checkbox { border-color: #6366f1; background: #6366f1; }
+.vote-player.selected .checkbox::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 700; }
+.vote-btn {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 14px;
+  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  margin-bottom: 20px;
+}
+.vote-btn:disabled { opacity: 0.3; pointer-events: none; }
+
+/* RESULTS */
+.result-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
+.result-screen .eliminated-name { font-size: 32px; font-weight: 900; }
+.result-screen .role-reveal {
+  padding: 12px 28px; border-radius: 14px; font-weight: 700; font-size: 20px;
+}
+.result-screen .role-reveal.civilian { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
+.result-screen .role-reveal.spy { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+.result-screen .role-reveal.white-hat { background: rgba(129,140,248,0.1); color: #818cf8; border: 1px solid rgba(129,140,248,0.2); }
+.result-screen .sub { color: #666; font-size: 14px; }
+.result-screen .btn {
+  width: 100%; max-width: 280px; padding: 16px;
+  border-radius: 14px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  border: none;
+}
+.result-screen .btn:active { transform: scale(0.97); }
+.result-screen .btn.primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+.result-screen .btn.secondary { background: transparent; border: 1px solid #333; color: #999; }
+
+/* WHITE HAT GUESS */
+.guess-screen { justify-content: center; align-items: center; text-align: center; gap: 20px; }
+.guess-screen h3 { font-size: 20px; font-weight: 700; }
+.guess-screen .hint { color: #666; font-size: 14px; }
+.guess-screen input {
+  width: 100%; max-width: 320px; padding: 16px; border-radius: 14px;
+  font-family: inherit; font-size: 16px;
+  background: #1a1a1a; color: #f5f5f5; border: 1px solid #333;
+  text-align: center; font-weight: 600; outline: none;
+}
+.guess-screen input:focus { border-color: #6366f1; }
+.guess-screen .btn {
+  width: 100%; max-width: 320px; padding: 16px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 14px;
+  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+
+/* GAME OVER */
+.gameover-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
+.gameover-screen .winner-icon { font-size: 72px; }
+.gameover-screen .winner-text { font-size: 32px; font-weight: 900; }
+.gameover-screen .winner-text.civilian-win { background: linear-gradient(135deg, #22c55e, #16a34a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.gameover-screen .winner-text.spy-win { background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.gameover-screen .winner-text.white-hat-win { background: linear-gradient(135deg, #818cf8, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.gameover-screen .sub { color: #666; font-size: 14px; }
+.gameover-screen .btn {
+  padding: 16px 40px;
+  background: #1a1a1a; border: 1px solid #333; border-radius: 14px;
+  color: #f5f5f5; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.gameover-screen .btn:active { background: #222; }
+
+/* ROOM CODE */
+.room-code-display {
+  background: #1a1a1a; border: 1px solid #333; border-radius: 14px;
+  padding: 12px 20px; text-align: center;
+  font-size: 28px; font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #818cf8;
+  margin: 8px 0;
+}
+.room-copy { font-size: 12px; color: #555; cursor: pointer; margin-top: 4px; }
+.room-copy:active { color: #999; }
+.waiting-players {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin: 8px 0;
+  max-width: 320px;
+}
+.waiting-player-chip {
+  padding: 8px 16px; background: #1a1a1a; border: 1px solid #333;
+  border-radius: 20px; font-size: 14px; font-weight: 500; color: #999;
+}
+
+.small-note { font-size: 12px; color: #444; text-align: center; margin-top: -4px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="bg-3d">
+  <div class="bg-layer"></div>
+  <div class="bg-layer bg-layer-2"></div>
+  <div class="bg-orbe"></div>
+  <div class="bg-orbe"></div>
+  <div class="bg-orbe"></div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- SCREEN: LOBBY -->
+  <div class="screen active lobby" id="screen-lobby">
+    <h1>🕵️ Ai Là<br>Gián Điệp</h1>
+    <p class="sub">Game đoán vai trực tuyến</p>
+    <div class="join-section">
+      <div class="">
+        <div class="" style="display:flex;gap:10px;">
+          <input type="text" id="nameInputMain" placeholder="Nhập tên của bạn..." maxlength="20" autocomplete="off">
+        </div>
+      </div>
+      <button class="btn" onclick="createRoom()">🏠 Tạo Phòng</button>
+      <div class="or-divider">hoặc</div>
+      <div class="room-input-group">
+        <input type="text" id="roomCodeInput" placeholder="Mã phòng..." maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em;">
+        <button class="btn" onclick="joinRoom()">Vào</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: SETUP (only host) -->
+  <div class="screen setup" id="screen-setup">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>⚙️ Cài đặt</h2>
+      <span style="font-size:14px;color:#666;">Mã: <strong id="roomCodeDisplaySetup" style="color:#818cf8;letter-spacing:0.1em;"></strong></span>
+    </div>
+    <div class="small-note">Chia sẻ mã phòng cho bạn bè</div>
+    <div style="margin-top:8px;">
+      <div style="font-size:14px;color:#666;margin-bottom:8px;">Số người chơi</div>
+      <div class="player-count">
+        <button class="adj" onclick="adjustTotal(-1)">−</button>
+        <span class="num" id="totalNum">8</span>
+        <button class="adj" onclick="adjustTotal(1)">+</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:14px;color:#666;margin-bottom:8px;">Vai trò</div>
+      <div class="role-slots">
+        <div class="role-slot">
+          <div class="label">👤 Dân</div>
+          <div class="count" id="civilianCount">4</div>
+        </div>
+        <div class="role-slot">
+          <div class="label">🕵️ Gián điệp</div>
+          <div class="count" id="spyCountDisp">2</div>
+          <div class="adj-group">
+            <button class="adj" onclick="adjSpy(-1)">−</button>
+            <button class="adj" onclick="adjSpy(1)">+</button>
+          </div>
+        </div>
+        <div class="role-slot">
+          <div class="label">🎩 Mũ trắng</div>
+          <div class="count" id="whiteHatCountDisp">2</div>
+          <div class="adj-group">
+            <button class="adj" onclick="adjWhiteHat(-1)">−</button>
+            <button class="adj" onclick="adjWhiteHat(1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:auto;"></div>
+    <button class="start-btn" onclick="startGame()">🚀 Bắt đầu game!</button>
+  </div>
+
+  <!-- SCREEN: NAME INPUT (players join names) -->
+  <div class="screen name-input" id="screen-nameinput">
+    <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Phòng: <strong id="roomCodeDispName" style="color:#818cf8;">---</strong></div>
+    <h3>👋 Nhập tên</h3>
+    <p class="sub">Đã vào phòng:</p>
+    <div class="player-list" id="playerListPreview"></div>
+    <input type="text" id="nameJoinInput" placeholder="Tên của bạn..." maxlength="20" autocomplete="off">
+    <button class="btn" onclick="submitJoinName()" style="margin-top:8px;">Vào phòng</button>
+  </div>
+
+  <!-- SCREEN: WAITING FOR HOST -->
+  <div class="screen waiting-screen" id="screen-waiting-host">
+    <h3>⏳ Chờ chủ phòng bắt đầu...</h3>
+    <p class="sub" id="waitingPlayersText">0 người đã vào phòng</p>
+    <div class="waiting-players" id="waitingPlayersList"></div>
+  </div>
+
+  <!-- SCREEN: CARD DRAW -->
+  <div class="screen card-screen" id="screen-card">
+    <div class="player-name-tag" id="cardPlayerName">—</div>
+    <div class="card-3d" onclick="flipCard()">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-back">
+          <div class="logo">🕵️</div>
+          <div class="tap-text">Chạm để xem vai</div>
+        </div>
+        <div class="card-face card-front">
+          <div class="role-label">Vai trò</div>
+          <div class="role-name" id="cardRole">—</div>
+          <div class="secret-word" id="cardKeyword">—</div>
+          <div class="hint-text" id="cardHint"></div>
+          <button class="done-btn" id="cardDone" onclick="cardDone(event)">✅ Đã xong</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-seq">Người <span id="cardSeqCurrent">1</span>/<span id="cardSeqTotal">8</span></div>
+  </div>
+
+  <!-- SCREEN: WAITING (after draw done) -->
+  <div class="screen waiting-screen" id="screen-waiting-phase">
+    <h3 id="phaseWaitTitle">⏳ Đang chờ...</h3>
+    <p class="sub" id="phaseWaitSub">Tất cả đã rút bài xong</p>
+    <button class="btn" id="phaseActionBtn" style="display:none;" onclick="phaseAction()">Tiếp theo</button>
+  </div>
+
+  <!-- SCREEN: VOTE -->
+  <div class="screen vote-screen" id="screen-vote">
+    <div class="phase-tag" id="votePhaseTag">VÒNG 1</div>
+    <div class="round-info">🗳️ Bỏ phiếu</div>
+    <div class="player-votes" id="voteList"></div>
+    <button class="vote-btn" id="voteSubmitBtn" onclick="submitVote()" disabled>Bỏ phiếu</button>
+  </div>
+
+  <!-- SCREEN: RESULT -->
+  <div class="screen result-screen" id="screen-result">
+    <div class="eliminated-name" id="eliminatedName">—</div>
+    <div class="role-reveal" id="eliminatedRole">—</div>
+    <p class="sub">đã bị loại</p>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;">
+      <button class="btn primary" id="resultNextBtn" onclick="resultNext()">Tiếp tục</button>
+      <button class="btn secondary" id="resultNextBtn2" style="display:none;" onclick="resultNext()">Tiếp tục</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: WHITE HAT GUESS -->
+  <div class="screen guess-screen" id="screen-guess">
+    <h3>🎩 Mũ Trắng</h3>
+    <div class="hint">Bạn bị vote ra. Hãy đoán từ của dân làng!</div>
+    <div style="font-size:13px;color:#666;">Gợi ý bạn có: <strong id="guessHint" style="color:#818cf8;"></strong></div>
+    <input type="text" id="guessInput" placeholder="Nhập từ đoán..." maxlength="30" autocomplete="off">
+    <button class="btn" onclick="submitGuess()">Đoán</button>
+  </div>
+
+  <!-- SCREEN: GAME OVER -->
+  <div class="screen gameover-screen" id="screen-gameover">
+    <div class="winner-icon" id="winnerIcon">🏆</div>
+    <div class="winner-text" id="winnerText">Dân làng thắng!</div>
+    <p class="sub" id="winnerSub">Đã vote ra hết gián điệp</p>
+    <button class="btn" onclick="resetToLobby()">🏠 Về phòng chờ</button>
+  </div>
+
+  <!-- SCREEN: ERROR / FALLBACK -->
+  <div class="screen waiting-screen" id="screen-error">
+    <h3>⚠️</h3>
+    <p class="sub" id="errorText">Có lỗi xảy ra</p>
+    <button class="btn" onclick="resetToLobby()">Quay lại</button>
+  </div>
+
+</div>
+
+<script>
+// === FIREBASE CONFIG ===
+const firebaseConfig = {
+  apiKey: "AIzaSyAFpnzjUdHCL_j7CWsDeJvGVXcr2wOryow",
+  authDomain: "ai-la-gian-diep.firebaseapp.com",
+  databaseURL: "https://ai-la-gian-diep-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ai-la-gian-diep",
+  storageBucket: "ai-la-gian-diep.firebasestorage.app",
+  messagingSenderId: "452354702659",
+  appId: "1:452354702659:web:b89fa58aa465ece7d8c3f6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// === CONSTANTS ===
+const TOTAL_PAIRS = 550;
+let wordPairs = [];
+
+// fetch word pairs
+async function loadWords() {
+  try {
+    const resp = await fetch('word_pairs.json');
+    wordPairs = await resp.json();
+    console.log('Loaded', wordPairs.length, 'word pairs');
+  } catch(e) {
+    console.warn('Could not load word pairs, using fallback', e);
+    wordPairs = [["con chó","con mèo","có bốn chân, hay nuôi trong nhà"]];
+  }
+}
+loadWords();
+
+function randPair() {
+  return wordPairs[Math.floor(Math.random() * wordPairs.length)];
+}
+
+// === STATE ===
+let myId = null;
+let myName = '';
+let myRole = null; // 'host' | 'player'
+let roomRef = null;
+let roomCode = '';
+let gameState = {}; // cached from firebase
+let selectedVote = null;
+let isHost = false;
+let cardsFlipped = {}; // track who flipped
+
+// === HELPERS ===
+function randId() {
+  return Math.random().toString(36).substring(2,10) + Date.now().toString(36);
+}
+
+function roomCodeGen() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r = '';
+  for(let i=0;i<6;i++) r += c[Math.floor(Math.random()*c.length)];
+  return r;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// === LOBBY ===
+function createRoom() {
+  const name = (document.getElementById('nameInputMain').value || '').trim();
+  if(!name) { alert('Nhập tên của bạn!'); return; }
+  myName = name;
+  myId = randId();
+  roomCode = roomCodeGen();
+  roomRef = db.ref('rooms/' + roomCode);
+
+  const pair = randPair();
+
+  roomRef.set({
+    host: myId,
+    hostName: name,
+    players: { [myId]: { name: name, joined: true } },
+    status: 'setup',
+    total: 8,
+    spies: 2,
+    whiteHats: 2,
+    pair: pair,
+    round: 0,
+    eliminated: {},
+    phase: 'wait',
+    turnOrder: [],
+    currentTurn: -1,
+    cardsSeen: {},
+    votes: {},
+    hostVotePass: false,
+  }).then(() => {
+    isHost = true;
+    myRole = 'host';
+    listenRoom();
+    document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
+    updateSetupUI();
+    showScreen('screen-setup');
+  });
+}
+
+function joinRoom() {
+  const name = (document.getElementById('nameInputMain').value || '').trim();
+  if(!name) { alert('Nhập tên của bạn!'); return; }
+  myName = name;
+  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if(!code || code.length < 4) { alert('Nhập mã phòng!'); return; }
+  roomCode = code;
+  roomRef = db.ref('rooms/' + code);
+
+  roomRef.once('value').then(snap => {
+    if(!snap.exists()) { alert('Không tìm thấy phòng!'); return; }
+    const data = snap.val();
+    if(data.status !== 'setup') { alert('Game đã bắt đầu!'); return; }
+    if(Object.keys(data.players||{}).length >= data.total) { alert('Phòng đầy!'); return; }
+
+    myId = randId();
+    myRole = 'player';
+    roomRef.child('players/' + myId).set({ name: name, joined: true });
+    listenRoom();
+    document.getElementById('roomCodeDispName').textContent = code;
+    document.getElementById('nameJoinInput').value = name;
+    showScreen('screen-nameinput');
+  });
+}
+
+// === ROOM LISTENER ===
+let roomListener = null;
+function listenRoom() {
+  if(roomListener) roomRef.off('value', roomListener);
+  roomListener = roomRef.on('value', snap => {
+    if(!snap.exists()) { /* room deleted */ return; }
+    gameState = snap.val();
+    onRoomUpdate();
+  });
+}
+
+function onRoomUpdate() {
+  const g = gameState;
+  if(!g) return;
+
+  switch(g.status) {
+    case 'setup':
+      if(isHost) { updateSetupUI(); showScreen('screen-setup'); }
+      else {
+        // show waiting in nameinput or waiting-screen
+        const players = Object.values(g.players||{});
+        const waitText = players.length + '/' + g.total + ' người';
+        document.getElementById('waitingPlayersText').textContent = waitText;
+        document.getElementById('waitingPlayersList').innerHTML = players.map(p =>
+          '<span class="waiting-player-chip">' + esc(p.name) + '</span>'
+        ).join('');
+        if(document.getElementById('screen-nameinput').classList.contains('active') ||
+           document.getElementById('screen-waiting-host').classList.contains('active')) {
+          showScreen('screen-waiting-host');
+        }
+      }
+      break;
+    case 'naming':
+      // host sees setup still, players see waiting
+      if(!isHost) {
+        const players = Object.values(g.players||{});
+        const txt = players.length + '/' + g.total + ' người — ' + (players.length >= g.total ? 'Đủ người!' : 'Chờ thêm...');
+        document.getElementById('waitingPlayersText').textContent = txt;
+        document.getElementById('waitingPlayersList').innerHTML = players.map(p =>
+          '<span class="waiting-player-chip">' + esc(p.name) + '</span>'
+        ).join('');
+        showScreen('screen-waiting-host');
+      }
+      break;
+    case 'drawing':
+      handleDrawing();
+      break;
+    case 'phase':
+      handlePhase();
+      break;
+    case 'voting':
+      handleVoting();
+      break;
+    case 'result':
+      handleResult();
+      break;
+    case 'guess':
+      handleGuess();
+      break;
+    case 'gameover':
+      handleGameOver();
+      break;
+  }
+}
+
+function esc(s) { return (s||'').replace(/[&<>]/g,''); }
+
+// === SETUP (host only) ===
+function updateSetupUI() {
+  document.getElementById('totalNum').textContent = gameState.total;
+  document.getElementById('civilianCount').textContent = gameState.total - gameState.spies - gameState.whiteHats;
+  document.getElementById('spyCountDisp').textContent = gameState.spies;
+  document.getElementById('whiteHatCountDisp').textContent = gameState.whiteHats;
+  document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
+}
+
+function adjustTotal(d) {
+  const g = gameState;
+  let n = g.total + d;
+  if(n < 4) n = 4;
+  if(n > 20) n = 20;
+  // auto adjust spies & white hats
+  let spies = Math.max(1, Math.floor(n * 0.25));
+  let wh = Math.max(1, Math.floor(n * 0.25));
+  if(spies + wh >= n) { spies = Math.max(1, spies-1); wh = Math.max(0, wh-1); }
+  g.total = n; g.spies = spies; g.whiteHats = wh;
+  roomRef.child('total').set(n);
+  roomRef.child('spies').set(spies);
+  roomRef.child('whiteHats').set(wh);
+}
+
+function adjSpy(d) {
+  const g = gameState;
+  let n = g.spies + d;
+  if(n < 0) n = 0;
+  if(n > g.total - g.whiteHats - 1) n = g.total - g.whiteHats - 1;
+  if(n + g.whiteHats >= g.total) return;
+  g.spies = n;
+  roomRef.child('spies').set(n);
+}
+
+function adjWhiteHat(d) {
+  const g = gameState;
+  let n = g.whiteHats + d;
+  if(n < 0) n = 0;
+  if(n > g.total - g.spies - 1) n = g.total - g.spies - 1;
+  if(n + g.spies >= g.total) return;
+  g.whiteHats = n;
+  roomRef.child('whiteHats').set(n);
+}
+
+function startGame() {
+  if(!isHost) return;
+  const g = gameState;
+  if(g.spies + g.whiteHats >= g.total) { alert('Quá nhiều gián điệp/mũ trắng!'); return; }
+
+  // Wait for all players to join (including host)
+  // Change status to 'naming' -> players enter names
+  roomRef.update({
+    status: 'naming',
+    phase: 'join',
+  });
+}
+
+// === PLAYER JOIN ===
+function submitJoinName() {
+  if(myRole === 'player' || myRole === 'host') {
+    // already joined
+    if(isHost) {
+      // start draw
+      startDrawingPhase();
+      return;
+    }
+    showScreen('screen-waiting-host');
+    return;
+  }
+  const name = document.getElementById('nameJoinInput').value.trim();
+  if(!name) { alert('Nhập tên!'); return; }
+  myName = name;
+  myId = randId();
+  myRole = 'player';
+  roomRef.child('players/' + myId).set({ name: name, joined: true });
+  showScreen('screen-waiting-host');
+}
+
+// === HOST: start drawing phase ===
+function startDrawingPhase() {
+  if(!isHost) return;
+  const g = gameState;
+  const players = Object.keys(g.players||{});
+  if(players.length < 2) { alert('Cần ít nhất 2 người!'); return; }
+
+  // Build roles
+  const roles = [];
+  for(let i=0;i<g.spies;i++) roles.push('spy');
+  for(let i=0;i<g.whiteHats;i++) roles.push('white_hat');
+  while(roles.length < players.length) roles.push('civilian');
+  shuffle(roles);
+
+  // Assign roles + words
+  const pair = g.pair || randPair();
+  const assignments = {};
+  const turnOrder = shuffle([...players]);
+
+  players.forEach((pid, i) => {
+    const role = roles[i] || 'civilian';
+    let word = '';
+    let hint = '';
+    if(role === 'civilian') {
+      word = pair[0];
+      hint = '';
+    } else if(role === 'spy') {
+      word = pair[1];
+      hint = '';
+    } else {
+      word = '';
+      hint = pair[2] || 'gợi ý mơ hồ';
+    }
+    assignments[pid] = { role, word, hint, seen: false };
+  });
+
+  roomRef.update({
+    status: 'drawing',
+    phase: 'draw',
+    assignments: assignments,
+    turnOrder: turnOrder,
+    currentTurn: 0,
+    cardsSeen: {},
+    round: 0,
+    eliminated: {},
+    pair: pair,
+  });
+}
+
+// === DRAWING ===
+function handleDrawing() {
+  const g = gameState;
+  if(!g.assignments) return;
+  const myAssign = g.assignments[myId];
+  if(!myAssign) return;
+
+  const total = g.turnOrder.length;
+  const currentIdx = g.currentTurn || 0;
+  const currentPid = g.turnOrder[currentIdx];
+  const isMyTurn = currentPid === myId;
+  const alreadySeen = g.cardsSeen && g.cardsSeen[myId];
+
+  if(isMyTurn && !alreadySeen) {
+    // show card
+    document.getElementById('cardPlayerName').textContent = myName;
+    document.getElementById('cardSeqCurrent').textContent = currentIdx + 1;
+    document.getElementById('cardSeqTotal').textContent = total;
+
+    const cRole = document.getElementById('cardRole');
+    const cWord = document.getElementById('cardKeyword');
+    const cHint = document.getElementById('cardHint');
+    cRole.className = 'role-name';
+
+    if(myAssign.role === 'civilian') {
+      cRole.textContent = 'Người Dân';
+      cRole.className = 'role-name civilian';
+      cWord.textContent = myAssign.word;
+      cWord.style.display = 'block';
+      cHint.textContent = 'Giữ bí mật!';
+    } else if(myAssign.role === 'spy') {
+      cRole.textContent = 'Gián Điệp';
+      cRole.className = 'role-name spy';
+      cWord.textContent = myAssign.word;
+      cWord.style.display = 'block';
+      cHint.textContent = 'Hãy trà trộn!';
+    } else {
+      cRole.textContent = 'Mũ Trắng';
+      cRole.className = 'role-name white-hat';
+      cWord.style.display = 'none';
+      cHint.textContent = 'Gợi ý: ' + myAssign.hint;
+    }
+
+    // reset card flip
+    document.getElementById('cardInner').classList.remove('flipped');
+    showScreen('screen-card');
+  } else {
+    // waiting for turn
+    showScreen('screen-waiting-host');
+    document.getElementById('waitingPlayersText').textContent =
+      'Đang rút bài... (' + currentIdx + '/' + total + ')';
+  }
+}
+
+function flipCard() {
+  const inner = document.getElementById('cardInner');
+  inner.classList.add('flipped');
+}
+
+function cardDone(e) {
+  e.stopPropagation();
+  // Mark card seen
+  roomRef.child('cardsSeen/' + myId).set(true);
+  // Check if all current player has seen
+  const g = gameState;
+  const seenCount = Object.keys(g.cardsSeen||{}).length;
+  const currentIdx = g.currentTurn || 0;
+
+  if(seenCount <= currentIdx) {
+    // move to next
+    roomRef.child('currentTurn').set(currentIdx + 1);
+  }
+  // Show waiting
+  document.getElementById('phaseWaitTitle').textContent = '✅ Đã xem!';
+  document.getElementById('phaseWaitSub').textContent = 'Chờ lượt tiếp theo...';
+  document.getElementById('phaseActionBtn').style.display = 'none';
+  showScreen('screen-waiting-phase');
+}
+
+// === PHASE: all done drawing, waiting for host ===
+function handlePhase() {
+  const g = gameState;
+  if(g.phase === 'draw_done') {
+    // All cards seen, move to voting phase
+    if(isHost) {
+      document.getElementById('phaseWaitTitle').textContent = '📋 Tất cả đã rút bài!';
+      document.getElementById('phaseWaitSub').textContent = 'Bắt đầu vòng nói';
+      document.getElementById('phaseActionBtn').style.display = 'block';
+      document.getElementById('phaseActionBtn').textContent = 'Bắt đầu vote vòng 1';
+      showScreen('screen-waiting-phase');
+    } else {
+      document.getElementById('phaseWaitTitle').textContent = '📋 Đã rút xong!';
+      document.getElementById('phaseWaitSub').textContent = 'Chờ chủ phòng bắt đầu...';
+      document.getElementById('phaseActionBtn').style.display = 'none';
+      showScreen('screen-waiting-phase');
+    }
+  } else if(g.phase === 'vote_round') {
+    // already in voting, show vote screen
+    handleVoting();
+  }
+}
+
+function phaseAction() {
+  if(!isHost) return;
+  const g = gameState;
+  if(g.phase === 'draw_done') {
+    // Start voting round 1
+    roomRef.update({
+      status: 'voting',
+      phase: 'vote_round',
+      round: 1,
+      votes: {},
+    });
+  }
+}
+
+// === VOTING ===
+function handleVoting() {
+  const g = gameState;
+  const round = g.round || 1;
+  const alivePlayers = getAlivePlayers(g);
+  
+  document.getElementById('votePhaseTag').textContent = 'VÒNG ' + round;
+  
+  // build vote list
+  const list = document.getElementById('voteList');
+  list.innerHTML = '';
+  selectedVote = null;
+  
+  alivePlayers.forEach(pid => {
+    const p = g.players[pid];
+    if(!p) return;
+    const votesFor = Object.values(g.votes||{}).filter(v => v === pid).length;
+    const div = document.createElement('div');
+    div.className = 'vote-player';
+    div.dataset.pid = pid;
+    div.innerHTML = `
+      <span class="name">${esc(p.name)}</span>
+      <span class="votes-count">${votesFor} phiếu</span>
+      <span class="checkbox"></span>
+    `;
+    div.onclick = () => {
+      if(g.votes && g.votes[myId]) return; // already voted
+      document.querySelectorAll('.vote-player').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedVote = pid;
+      document.getElementById('voteSubmitBtn').disabled = false;
+    };
+    list.appendChild(div);
+  });
+
+  // If already voted
+  if(g.votes && g.votes[myId]) {
+    document.querySelectorAll('.vote-player').forEach(el => el.classList.remove('selected'));
+    document.getElementById('voteSubmitBtn').disabled = true;
+    document.getElementById('voteSubmitBtn').textContent = '✅ Đã bỏ phiếu';
+  } else {
+    document.getElementById('voteSubmitBtn').textContent = '🗳️ Bỏ phiếu';
+    document.getElementById('voteSubmitBtn').disabled = true;
+  }
+
+  // Check if all alive players voted
+  const allVoted = alivePlayers.every(pid => g.votes && g.votes[pid]);
+  if(allVoted && alivePlayers.length > 0) {
+    // Determine elimination
+    determineElimination(g);
+  }
+
+  showScreen('screen-vote');
+}
+
+function getAlivePlayers(g) {
+  return (g.turnOrder||[]).filter(pid => !(g.eliminated && g.eliminated[pid]));
+}
+
+function submitVote() {
+  if(!selectedVote || !myId) return;
+  roomRef.child('votes/' + myId).set(selectedVote);
+  document.getElementById('voteSubmitBtn').disabled = true;
+  document.getElementById('voteSubmitBtn').textContent = '✅ Đã bỏ phiếu';
+}
+
+function determineElimination(g) {
+  const alive = getAlivePlayers(g);
+  const votes = g.votes || {};
+  const tally = {};
+  alive.forEach(pid => tally[pid] = 0);
+  Object.values(votes).forEach(v => { if(tally[v] !== undefined) tally[v]++; });
+  
+  let maxVotes = 0;
+  let eliminated = null;
+  Object.entries(tally).forEach(([pid, count]) => {
+    if(count > maxVotes) { maxVotes = count; eliminated = pid; }
+  });
+
+  if(!eliminated) return;
+  
+  // Check tie: if multiple have same max votes
+  const ties = Object.entries(tally).filter(([_,c]) => c === maxVotes);
+  if(ties.length > 1) {
+    // tie - need revote or just take the first (simplify: re-vote next round)
+    roomRef.update({ phase: 'tie', tiePlayers: ties.map(t=>t[0]) });
+    return;
+  }
+
+  // Eliminate
+  updateElimination(g, eliminated);
+}
+
+function updateElimination(g, eliminatedPid) {
+  const role = g.assignments[eliminatedPid]?.role || 'unknown';
+  roomRef.update({
+    'eliminated/' + eliminatedPid: true,
+    status: 'result',
+    lastEliminated: eliminatedPid,
+    lastRole: role,
+  });
+}
+
+// === RESULT ===
+function handleResult() {
+  const g = gameState;
+  const pid = g.lastEliminated;
+  const p = g.players[pid];
+  const role = g.lastRole;
+
+  document.getElementById('eliminatedName').textContent = p ? p.name : '—';
+  const roleEl = document.getElementById('eliminatedRole');
+  let roleText = '';
+  let roleClass = '';
+  if(role === 'civilian') { roleText = '👤 Người Dân'; roleClass = 'civilian'; }
+  else if(role === 'spy') { roleText = '🕵️ Gián Điệp'; roleClass = 'spy'; }
+  else { roleText = '🎩 Mũ Trắng'; roleClass = 'white-hat'; }
+  roleEl.textContent = roleText;
+  roleEl.className = 'role-reveal ' + roleClass;
+
+  // Show appropriate next button
+  if(role === 'white_hat') {
+    document.getElementById('resultNextBtn').style.display = 'none';
+    document.getElementById('resultNextBtn2').style.display = 'none';
+  } else {
+    document.getElementById('resultNextBtn').style.display = 'block';
+    document.getElementById('resultNextBtn').textContent = 'Tiếp tục';
+    document.getElementById('resultNextBtn2').style.display = 'none';
+  }
+
+  showScreen('screen-result');
+
+  // If white hat eliminated, move to guess phase
+  if(role === 'white_hat') {
+    setTimeout(() => {
+      roomRef.update({ status: 'guess', guessPlayer: pid });
+    }, 500);
+  }
+}
+
+function resultNext() {
+  const g = gameState;
+  // Check win conditions
+  const alive = getAlivePlayers(g);
+  const aliveAssigns = alive.map(pid => g.assignments[pid]?.role);
+  const aliveSpies = aliveAssigns.filter(r => r === 'spy').length;
+  const aliveCivilians = aliveAssigns.filter(r => r === 'civilian').length;
+  const initialCivilians = Object.values(g.assignments||{}).filter(a => a.role === 'civilian').length;
+
+  // Spy win: civilians <= 40% of original
+  if(aliveSpies > 0 && aliveCivilians <= Math.floor(initialCivilians * 0.4)) {
+    roomRef.update({ status: 'gameover', winner: 'spy' });
+    return;
+  }
+
+  if(aliveSpies === 0) {
+    roomRef.update({ status: 'gameover', winner: 'civilian' });
+    return;
+  }
+
+  // Next round: reset votes, increment round
+  const round = (g.round || 1) + 1;
+  roomRef.update({
+    status: 'voting',
+    phase: 'vote_round',
+    round: round,
+    votes: {},
+  });
+}
+
+// === GUESS (white hat) ===
+function handleGuess() {
+  const g = gameState;
+  const isMe = g.guessPlayer === myId;
+  
+  if(isMe) {
+    document.getElementById('guessHint').textContent = g.pair ? g.pair[2] : '—';
+    showScreen('screen-guess');
+  } else {
+    document.getElementById('phaseWaitTitle').textContent = '🎩 Mũ Trắng đang đoán...';
+    document.getElementById('phaseWaitSub').textContent = 'Chờ kết quả...';
+    document.getElementById('phaseActionBtn').style.display = 'none';
+    showScreen('screen-waiting-phase');
+  }
+}
+
+function submitGuess() {
+  const g = gameState;
+  const guess = document.getElementById('guessInput').value.trim().toLowerCase();
+  if(!guess) { alert('Nhập từ đoán!'); return; }
+  
+  const correctWord = (g.pair ? g.pair[0] : '').toLowerCase();
+  // Accept if guess contains the correct word or vice versa
+  const match = guess.includes(correctWord) || correctWord.includes(guess);
+  
+  if(match) {
+    roomRef.update({ status: 'gameover', winner: 'white_hat', guessResult: true });
+  } else {
+    // Wrong guess, white hat eliminated normally
+    roomRef.update({ status: 'gameover', winner: 'none', guessResult: false });
+  }
+}
+
+// === GAME OVER ===
+function handleGameOver() {
+  const g = gameState;
+  const winner = g.winner || 'none';
+  
+  let icon = '🏆';
+  let text = '';
+  let sub = '';
+  let cls = '';
+  
+  if(winner === 'civilian') {
+    icon = '👤'; text = 'Dân làng thắng!'; sub = 'Đã vote ra hết gián điệp'; cls = 'civilian-win';
+  } else if(winner === 'spy') {
+    icon = '🕵️'; text = 'Gián điệp thắng!'; sub = 'Dân làng không đủ số lượng'; cls = 'spy-win';
+  } else if(winner === 'white_hat') {
+    icon = '🎩'; text = 'Mũ Trắng thắng!'; sub = 'Đã đoán đúng từ của dân làng'; cls = 'white-hat-win';
+  } else {
+    icon = '💀'; text = 'Mũ trắng đoán sai!'; sub = 'Không ai thắng'; cls = '';
+  }
+  
+  document.getElementById('winnerIcon').textContent = icon;
+  const wt = document.getElementById('winnerText');
+  wt.textContent = text;
+  wt.className = 'winner-text ' + cls;
+  document.getElementById('winnerSub').textContent = sub;
+  
+  showScreen('screen-gameover');
+}
+
+// === RESET ===
+function resetToLobby() {
+  if(roomRef) {
+    roomRef.off('value');
+    if(isHost) {
+      roomRef.remove().catch(() => {});
+    }
+  }
+  roomRef = null;
+  myId = null;
+  isHost = false;
+  selectedVote = null;
+  document.getElementById('nameInputMain').value = '';
+  document.getElementById('roomCodeInput').value = '';
+  document.getElementById('guessInput').value = '';
+  showScreen('screen-lobby');
+}
+
+// Listen for draw completion (host observing)
+// Check periodically if all cards seen
+setInterval(() => {
+  if(!isHost || !roomRef) return;
+  const g = gameState;
+  if(!g || g.status !== 'drawing') return;
+  const allSeen = (g.turnOrder||[]).every(pid => g.cardsSeen && g.cardsSeen[pid]);
+  if(allSeen && g.currentTurn >= (g.turnOrder||[]).length) {
+    roomRef.child('phase').set('draw_done');
+  }
+}, 2000);
+
+// Also when all have seen and last turn passed
+// In handleDrawing, after last turn mark -> will trigger phase change via interval
+
+console.log('🕵️ Ai Là Gián Điệp — Loaded');
+</script>
+</body>
+</html>
