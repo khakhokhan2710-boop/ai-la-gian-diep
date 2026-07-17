@@ -380,10 +380,11 @@ function xuLyPhase(){
     if(chuPhong){
       document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
       document.getElementById('waitSub').textContent='Bắt đầu nói chuyện';
-      document.getElementById('waitBtn').style.display='block';
-      document.getElementById('waitBtn').textContent='⏱️ Bắt đầu 3 phút';
-      document.getElementById('timerArea').style.display='none';
-      document.getElementById('timerLabel').style.display='none';
+      document.getElementById('waitBtn').style.display='none';
+      document.getElementById('timerArea').style.display='block';
+      document.getElementById('timerLabel').style.display='block';
+      // Auto start 3 minute countdown
+      batDauDem();
     } else {
       document.getElementById('waitTitle').textContent='📋 Đã rút xong!';
       document.getElementById('waitSub').textContent='Chờ chủ phòng bắt đầu...';
@@ -392,32 +393,27 @@ function xuLyPhase(){
   }
 }
 var timerInterval = null;
-function waitAction(){
-  if(!chuPhong) return;
-  var g=gs;
-  if(g.phase==='draw_done'){
-    // Start 3 minute countdown
-    document.getElementById('waitBtn').style.display='none';
-    document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
-    document.getElementById('waitSub').textContent='Sau 3 phút sẽ mở vote';
-    document.getElementById('timerArea').style.display='block';
-    document.getElementById('timerLabel').style.display='block';
-    var seconds = 180;
-    document.getElementById('timerArea').textContent = '3:00';
-    if(timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(function(){
-      seconds--;
-      var m = Math.floor(seconds/60);
-      var s = seconds%60;
-      document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-      if(seconds <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
-      }
-    }, 1000);
-  }
+function batDauDem(){
+  if(timerInterval) clearInterval(timerInterval);
+  document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
+  document.getElementById('waitSub').textContent='Mở vote sau 3 phút';
+  document.getElementById('timerArea').style.display='block';
+  document.getElementById('timerLabel').style.display='block';
+  var seconds = 180;
+  document.getElementById('timerArea').textContent = '3:00';
+  timerInterval = setInterval(function(){
+    seconds--;
+    var m = Math.floor(seconds/60);
+    var s = seconds%60;
+    document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
+    if(seconds <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+    }
+  }, 1000);
 }
+function waitAction(){
 
 // VOTE
 function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<o.length;i++){if(!e[o[i]])r.push(o[i])}return r}
