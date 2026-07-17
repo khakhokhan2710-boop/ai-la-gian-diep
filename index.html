@@ -314,25 +314,28 @@ function batDau() {
 
 function batDauVe() {
   if(!chuPhong) return;
-  var g = gs; if(!g) return;
-  var ps = []; for(var k in (g.players||{})) ps.push(k);
-  if(ps.length<2) return;
-  var pair = g.pair || capNN();
-  var roles = [];
-  for(var i=0;i<(g.spies||0);i++) roles.push('spy');
-  for(var i=0;i<(g.whiteHats||0);i++) roles.push('white_hat');
-  while(roles.length<ps.length) roles.push('civilian');
-  xao(roles);
-  var to = ps.slice(); xao(to);
-  var as = {};
-  for(var i=0;i<ps.length;i++){
-    var pid = to[i], role = roles[i]||'civilian', w='', h='';
-    if(role==='civilian') w=pair[0];
-    else if(role==='spy') w=pair[1];
-    else h=pair[2]||'gợi ý';
-    as[pid] = {role:role,word:w,hint:h};
-  }
-  roomRef.update({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
+  roomRef.once('value').then(function(snap){
+    var g = snap.val();
+    if(!g) return;
+    var ps = []; for(var k in (g.players||{})) ps.push(k);
+    if(ps.length<2) return;
+    var pair = g.pair || capNN();
+    var roles = [];
+    for(var i=0;i<(g.spies||0);i++) roles.push('spy');
+    for(var i=0;i<(g.whiteHats||0);i++) roles.push('white_hat');
+    while(roles.length<ps.length) roles.push('civilian');
+    xao(roles);
+    var to = ps.slice(); xao(to);
+    var as = {};
+    for(var i=0;i<ps.length;i++){
+      var pid = to[i], role = roles[i]||'civilian', w='', h='';
+      if(role==='civilian') w=pair[0];
+      else if(role==='spy') w=pair[1];
+      else h=pair[2]||'gợi ý';
+      as[pid] = {role:role,word:w,hint:h};
+    }
+    roomRef.update({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
+  });
 }
 
 function xuLyRutBai() {
@@ -364,28 +367,25 @@ function xuLyRutBai() {
 
 function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
+  var cur = gs.currentTurn || 0;
   roomRef.child('cardsSeen/'+myId).set(true);
-  var to = gs.turnOrder || [];
-  var curSeen = gs.cardsSeen || {};
-  var countSeen = 0;
-  for(var k in curSeen) { if(curSeen[k]) countSeen++; }
-  var isLast = (countSeen + 1 >= to.length);
-  // Always write phase if last
-  var upd = {currentTurn: (gs.currentTurn||0)+1};
-  if(isLast) {
-    upd.phase = 'draw_done';
-    upd.status = 'phase';
-  }
-  roomRef.update(upd);
-  // Show waiting
+  roomRef.child('currentTurn').set(cur + 1);
   hien('s3');
-  if(isLast) {
-    document.getElementById('waitTitle').textContent='✅ Tất cả đã rút!';
-    document.getElementById('waitSub').textContent='Đang chờ mở vote...';
-  } else {
-    document.getElementById('waitTitle').textContent='✅ Đã xem!';
-    document.getElementById('waitSub').textContent='Chờ người tiếp theo...';
-  }
+  document.getElementById('waitTitle').textContent='✅ Đã xem!';
+  document.getElementById('waitSub').textContent='Chờ người tiếp theo...';
+  // Read fresh data from Firebase (not cache) to check all done
+  roomRef.once('value').then(function(snap){
+    var g2 = snap.val();
+    if(!g2) return;
+    gs = g2;
+    var turnOrder = g2.turnOrder || [];
+    var cards = g2.cardsSeen || {};
+    var doneCount = 0;
+    for(var k in cards) { if(cards[k]) doneCount++; }
+    if(doneCount >= turnOrder.length) {
+      roomRef.update({phase:'draw_done',status:'phase'});
+    }
+  });
 }
 
 function xuLyPhase(){
@@ -501,6 +501,7 @@ function waitAction(){
   }
 }
 function skipVote(){
+  if(!chuPhong) return;
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
@@ -546,7 +547,7 @@ function tinhLoai(g){
   if(!el)return;
   var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
   if(ties.length>1)return;
-  var role=(gs.assignments[el]&&gs.assignments[el].role)||'unknown';
+  var role=(g.assignments[el]&&g.assignments[el].role)||'unknown';
   var ud={};ud['eliminated/'+el]=true;ud.status='result';ud.lastEliminated=el;ud.lastRole=role;
   roomRef.update(ud);
 }
