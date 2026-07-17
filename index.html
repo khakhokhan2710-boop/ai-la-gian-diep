@@ -743,7 +743,9 @@ function listenRoom() {
   
   roomPlayersListener = roomRef.child('players').on('value', function(snap) {
     if(!snap.exists() || !gameState) { return; }
-    gameState.players = snap.val();
+    var newPlayers = snap.val();
+    gameState.players = newPlayers;
+    console.log('Players updated:', JSON.stringify(newPlayers).substring(0,100));
     if(gameState.status === 'setup') {
       updateSetupUI();
     }
