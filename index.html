@@ -3,584 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🕵️ Ai Là Gián Điệp</title>
-<!-- Firebase -->
+<title>Gián Điệp</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #0a0a0a;
-  color: #f5f5f5;
-  min-height: 100vh;
-  overflow: hidden;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* 3D Parallax Background */
-.bg-3d {
-  position: fixed;
-  inset: -40px;
-  z-index: 0;
-  overflow: hidden;
-  perspective: 1200px;
-}
-.bg-layer {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #0a0a0a 60%);
-  transform: rotateX(6deg) translateZ(-20px);
-  transform-origin: center top;
-  transition: transform 0.3s cubic-bezier(.1,.7,.3,1);
-}
-.bg-layer-2 {
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 40px,
-    rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px
-  );
-  transform: rotateX(6deg) translateZ(-10px);
-}
-.bg-orbe {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
-  animation: orbFloat 8s ease-in-out infinite alternate;
-}
-.bg-orbe:nth-child(1) {
-  width: 400px; height: 400px;
-  background: #6366f1;
-  top: -100px; left: -100px;
-  animation-delay: 0s;
-}
-.bg-orbe:nth-child(2) {
-  width: 300px; height: 300px;
-  background: #8b5cf6;
-  bottom: -50px; right: -50px;
-  animation-delay: -3s;
-}
-.bg-orbe:nth-child(3) {
-  width: 250px; height: 250px;
-  background: #a78bfa;
-  top: 50%; left: 50%;
-  animation-delay: -5s;
-}
-@keyframes orbFloat {
-  0% { transform: translate(0,0) scale(1); }
-  100% { transform: translate(30px,-30px) scale(1.15); }
-}
-
-.app {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 20px 16px;
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* === SCREENS === */
-.screen { display: none; flex-direction: column; height: 100%; }
-.screen.active { display: flex; }
-
-/* LOBBY */
-.lobby { justify-content: center; align-items: center; gap: 28px; text-align: center; }
-.lobby h1 {
-  font-size: 32px; font-weight: 900; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #c084fc, #818cf8);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  line-height: 1.15;
-}
-.lobby .sub { font-size: 15px; color: #666; margin-top: 4px; }
-.lobby .join-section {
-  width: 100%; max-width: 320px;
-  display: flex; flex-direction: column; gap: 14px;
-}
-.lobby input, .lobby .btn {
-  width: 100%; padding: 16px; border-radius: 14px;
-  font-family: inherit; font-size: 16px;
-  background: #1a1a1a; color: #f5f5f5; border: 1px solid #222;
-  text-align: center; font-weight: 600;
-  outline: none; transition: 0.15s;
-}
-.lobby input:focus { border-color: #6366f1; }
-.lobby .btn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; cursor: pointer; font-weight: 700;
-  padding: 16px;
-}
-.lobby .btn:active { transform: scale(0.97); opacity: 0.9; }
-.lobby .or-divider { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #444; }
-.lobby .or-divider::before, .lobby .or-divider::after {
-  content: ''; flex: 1; height: 1px; background: #222;
-}
-.lobby .room-input-group { display: flex; gap: 10px; }
-.lobby .room-input-group input { flex: 1; }
-.lobby .room-input-group .btn {
-  flex: none; width: auto; padding: 16px 20px;
-  background: transparent; border: 1px solid #444; color: #999; font-weight: 500;
-}
-
-/* SETUP */
-.setup { gap: 20px; padding-top: 20px; }
-.setup h2 { font-size: 24px; font-weight: 800; }
-.setup .player-count {
-  display: flex; align-items: center; justify-content: center; gap: 16px;
-  margin: 8px 0;
-}
-.setup .player-count .num {
-  font-size: 48px; font-weight: 900;
-  min-width: 60px; text-align: center;
-  color: #f5f5f5;
-}
-.setup .player-count .adj {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: #1a1a1a; border: 1px solid #333;
-  color: #f5f5f5; font-size: 24px; font-weight: 600;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: 0.12s;
-}
-.setup .player-count .adj:active { background: #333; transform: scale(0.92); }
-.setup .role-slots {
-  display: flex; gap: 12px; justify-content: center;
-}
-.setup .role-slot {
-  background: #141414; border: 1px solid #222; border-radius: 14px;
-  padding: 14px 16px; text-align: center; flex: 1; min-width: 0;
-}
-.setup .role-slot .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-.setup .role-slot .count { font-size: 20px; font-weight: 700; }
-.setup .role-slot .adj-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
-.setup .role-slot .adj-group .adj {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: transparent; border: 1px solid #333;
-  color: #f5f5f5; font-size: 16px; cursor: pointer;
-}
-.setup .role-slot .adj-group .adj:active { background: #222; }
-.setup .start-btn {
-  margin-top: auto; margin-bottom: 20px;
-  width: 100%; padding: 18px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 16px;
-  font-family: inherit; font-size: 18px; font-weight: 700;
-  cursor: pointer; transition: 0.15s;
-}
-.setup .start-btn:active { transform: scale(0.97); opacity: 0.9; }
-
-/* NAME INPUT */
-.name-input { justify-content: center; align-items: center; gap: 20px; text-align: center; }
-.name-input h3 { font-size: 20px; font-weight: 700; }
-.name-input .sub { color: #666; font-size: 14px; margin-bottom: 4px; }
-.name-input .player-list {
-  width: 100%; max-width: 320px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
-  margin: 4px 0;
-}
-.name-input .player-chip {
-  padding: 6px 14px; background: #1a1a1a; border-radius: 20px; font-size: 13px; color: #999; font-weight: 500;
-}
-.name-input input {
-  width: 100%; max-width: 320px; padding: 16px; border-radius: 14px;
-  font-family: inherit; font-size: 16px;
-  background: #1a1a1a; color: #f5f5f5; border: 1px solid #333;
-  text-align: center; font-weight: 600; outline: none;
-}
-.name-input input:focus { border-color: #6366f1; }
-.name-input .btn {
-  width: 100%; max-width: 320px; padding: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 14px;
-  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-}
-.name-input .btn:active { transform: scale(0.97); }
-
-/* 3D CARD */
-.card-screen { justify-content: center; align-items: center; }
-.card-3d {
-  width: 280px; height: 400px;
-  perspective: 1000px;
-  margin-bottom: 20px;
-}
-.card-inner {
-  position: relative; width: 100%; height: 100%;
-  transition: transform 1s cubic-bezier(0.2,0.8,0.3,1);
-  transform-style: preserve-3d;
-}
-.card-inner.flipped { transform: rotateY(180deg); }
-.card-face {
-  position: absolute; inset: 0;
-  border-radius: 24px;
-  backface-visibility: hidden;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 28px 20px;
-  box-shadow: 0 20px 60px rgba(99,102,241,0.2);
-}
-.card-back {
-  background: linear-gradient(135deg, #1e1b4b, #0f172a);
-  border: 1.5px solid rgba(99,102,241,0.3);
-}
-.card-back .logo {
-  font-size: 64px; margin-bottom: 12px;
-  text-shadow: 0 0 40px rgba(99,102,241,0.4);
-}
-.card-back .tap-text { font-size: 14px; color: #666; font-weight: 500; }
-.card-front {
-  background: linear-gradient(135deg, #141414, #1a1a1a);
-  border: 1.5px solid #333;
-  transform: rotateY(180deg);
-  gap: 8px;
-}
-.card-front .role-label {
-  font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
-  color: #555; font-weight: 600;
-}
-.card-front .role-name {
-  font-size: 40px; font-weight: 900; letter-spacing: -0.02em;
-}
-.card-front .role-name.spy { color: #ef4444; }
-.card-front .role-name.civilian { color: #22c55e; }
-.card-front .role-name.white-hat { color: #818cf8; }
-.card-front .secret-word {
-  margin-top: 4px;
-  font-size: 28px; font-weight: 800;
-  padding: 12px 24px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 14px;
-  letter-spacing: 0.02em;
-}
-.card-front .hint-text {
-  font-size: 13px; color: #555;
-  max-width: 200px; text-align: center; line-height: 1.4;
-}
-.card-front .done-btn {
-  margin-top: 12px;
-  padding: 12px 32px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  color: #999;
-  font-family: inherit; font-size: 14px; font-weight: 600;
-  cursor: pointer;
-}
-.card-front .done-btn:active { background: #222; color: #f5f5f5; }
-.card-seq { font-size: 13px; color: #555; }
-.card-seq strong { color: #999; }
-.player-name-tag {
-  font-size: 15px; color: #888; font-weight: 500;
-  margin-bottom: 4px;
-}
-
-/* WAITING */
-.waiting-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
-.waiting-screen h3 { font-size: 20px; font-weight: 700; }
-.waiting-screen .sub { color: #666; font-size: 14px; }
-.waiting-screen .btn {
-  padding: 14px 40px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 14px;
-  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-}
-.waiting-screen .btn:active { transform: scale(0.97); }
-
-/* VOTING */
-.vote-screen { gap: 16px; padding-top: 12px; }
-.vote-screen .phase-tag {
-  font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
-  color: #555; font-weight: 600; text-align: center;
-}
-.vote-screen .round-info {
-  text-align: center; font-size: 18px; font-weight: 700;
-}
-.vote-screen .player-votes {
-  display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
-  flex: 1;
-}
-.vote-player {
-  display: flex; align-items: center; gap: 12px;
-  background: #141414; border: 1px solid #222;
-  border-radius: 14px; padding: 14px 16px;
-  cursor: pointer; transition: 0.12s;
-}
-.vote-player:active { background: #1a1a1a; transform: scale(0.98); }
-.vote-player.selected { border-color: #6366f1; background: #1a1a2e; }
-.vote-player .name { flex: 1; font-weight: 600; font-size: 16px; }
-.vote-player .votes-count { font-size: 13px; color: #666; }
-.vote-player .checkbox {
-  width: 22px; height: 22px; border-radius: 50%;
-  border: 2px solid #444; display: flex; align-items: center; justify-content: center;
-  transition: 0.12s; flex-shrink: 0;
-}
-.vote-player.selected .checkbox { border-color: #6366f1; background: #6366f1; }
-.vote-player.selected .checkbox::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 700; }
-.vote-btn {
-  width: 100%; padding: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 14px;
-  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-  margin-bottom: 20px;
-}
-.vote-btn:disabled { opacity: 0.3; pointer-events: none; }
-
-/* RESULTS */
-.result-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
-.result-screen .eliminated-name { font-size: 32px; font-weight: 900; }
-.result-screen .role-reveal {
-  padding: 12px 28px; border-radius: 14px; font-weight: 700; font-size: 20px;
-}
-.result-screen .role-reveal.civilian { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
-.result-screen .role-reveal.spy { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
-.result-screen .role-reveal.white-hat { background: rgba(129,140,248,0.1); color: #818cf8; border: 1px solid rgba(129,140,248,0.2); }
-.result-screen .sub { color: #666; font-size: 14px; }
-.result-screen .btn {
-  width: 100%; max-width: 280px; padding: 16px;
-  border-radius: 14px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-  border: none;
-}
-.result-screen .btn:active { transform: scale(0.97); }
-.result-screen .btn.primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
-.result-screen .btn.secondary { background: transparent; border: 1px solid #333; color: #999; }
-
-/* WHITE HAT GUESS */
-.guess-screen { justify-content: center; align-items: center; text-align: center; gap: 20px; }
-.guess-screen h3 { font-size: 20px; font-weight: 700; }
-.guess-screen .hint { color: #666; font-size: 14px; }
-.guess-screen input {
-  width: 100%; max-width: 320px; padding: 16px; border-radius: 14px;
-  font-family: inherit; font-size: 16px;
-  background: #1a1a1a; color: #f5f5f5; border: 1px solid #333;
-  text-align: center; font-weight: 600; outline: none;
-}
-.guess-screen input:focus { border-color: #6366f1; }
-.guess-screen .btn {
-  width: 100%; max-width: 320px; padding: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: none; border-radius: 14px;
-  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-}
-
-/* GAME OVER */
-.gameover-screen { justify-content: center; align-items: center; text-align: center; gap: 16px; }
-.gameover-screen .winner-icon { font-size: 72px; }
-.gameover-screen .winner-text { font-size: 32px; font-weight: 900; }
-.gameover-screen .winner-text.civilian-win { background: linear-gradient(135deg, #22c55e, #16a34a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.gameover-screen .winner-text.spy-win { background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.gameover-screen .winner-text.white-hat-win { background: linear-gradient(135deg, #818cf8, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.gameover-screen .sub { color: #666; font-size: 14px; }
-.gameover-screen .btn {
-  padding: 16px 40px;
-  background: #1a1a1a; border: 1px solid #333; border-radius: 14px;
-  color: #f5f5f5; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
-}
-.gameover-screen .btn:active { background: #222; }
-
-/* ROOM CODE */
-.room-code-display {
-  background: #1a1a1a; border: 1px solid #333; border-radius: 14px;
-  padding: 12px 20px; text-align: center;
-  font-size: 28px; font-weight: 900;
-  letter-spacing: 0.15em;
-  color: #818cf8;
-  margin: 8px 0;
-}
-.room-copy { font-size: 12px; color: #555; cursor: pointer; margin-top: 4px; }
-.room-copy:active { color: #999; }
-.waiting-players {
-  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-  margin: 8px 0;
-  max-width: 320px;
-}
-.waiting-player-chip {
-  padding: 8px 16px; background: #1a1a1a; border: 1px solid #333;
-  border-radius: 20px; font-size: 14px; font-weight: 500; color: #999;
-}
-
-.small-note { font-size: 12px; color: #444; text-align: center; margin-top: -4px; }
-.hidden { display: none !important; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.app{width:100%;max-width:400px;padding:20px;height:100dvh;display:flex;flex-direction:column}
+.s{display:none;flex-direction:column;height:100%}.s.a{display:flex}
+h1{font-size:28px;font-weight:800;margin-bottom:4px}
+.p{color:#666;font-size:14px;margin-bottom:16px}
+.inp{width:100%;padding:14px;border-radius:12px;background:#1a1a1a;color:#f5f5f5;border:1px solid #333;font-size:16px;text-align:center;outline:0;margin-bottom:10px;font-family:inherit}
+.inp:focus{border-color:#6366f1}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px}
+.btn.pri{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.btn.sec{background:#1a1a1a;color:#999;border:1px solid #333}
+.btn:active{transform:scale(0.97)}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;margin:8px 0}
+.num{font-size:40px;font-weight:900;min-width:50px;text-align:center}
+.adj{width:44px;height:44px;border-radius:50%;background:#1a1a1a;border:1px solid #333;color:#f5f5f5;font-size:22px;cursor:pointer}
+.slot{background:#141414;border:1px solid #222;border-radius:12px;padding:12px;text-align:center;flex:1}
+.slot .lb{font-size:11px;color:#666;text-transform:uppercase}
+.slot .ct{font-size:18px;font-weight:700;margin:4px 0}.slot .adj2{width:30px;height:30px;border-radius:8px;background:0 0;border:1px solid #333;color:#f5f5f5;font-size:14px;cursor:pointer;margin:0 4px}
+.chip{display:inline-block;padding:6px 14px;background:#1a1a1a;border:1px solid #333;border-radius:20px;font-size:13px;color:#999;margin:3px}
+.card{width:260px;height:360px;margin:0 auto 16px;perspective:800px;cursor:pointer}
+.card-in{position:relative;width:100%;height:100%;transition:transform 1s;transform-style:preserve-3d}
+.card-in.f{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;border-radius:20px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-shadow:0 10px 40px rgba(99,102,241,0.2)}
+.card-bk{background:linear-gradient(135deg,#1e1b4b,#0f172a);border:1px solid rgba(99,102,241,0.3)}
+.card-bk .lg{font-size:48px}.card-bk .tp{font-size:13px;color:#666;margin-top:8px}
+.card-ft{background:linear-gradient(135deg,#141414,#1a1a1a);border:1px solid #333;transform:rotateY(180deg);gap:6px}
+.rl{font-size:11px;color:#555;text-transform:uppercase}
+.rn{font-size:32px;font-weight:900}
+.rn.spy{color:#ef4444}.rn.civ{color:#22c55e}.rn.wht{color:#818cf8}
+.sw{font-size:22px;font-weight:800;padding:10px 20px;background:#1a1a1a;border:1px solid #333;border-radius:10px}
+.sc{font-size:12px;color:#555;margin-top:8px}
+.flex-1{flex:1}
+.mt-a{margin-top:auto}
+.tc{text-align:center}
+.mb8{margin-bottom:8px}
 </style>
 </head>
 <body>
-
-<div class="bg-3d">
-  <div class="bg-layer"></div>
-  <div class="bg-layer bg-layer-2"></div>
-  <div class="bg-orbe"></div>
-  <div class="bg-orbe"></div>
-  <div class="bg-orbe"></div>
+<div class="app">
+<!-- Lobby -->
+<div class="s a" id="s0">
+ <div class="flex-1"></div>
+ <h1 class="tc">🕵️ Gián Điệp</h1>
+ <p class="p tc">Game đoán vai trực tuyến</p>
+ <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="20">
+ <button class="btn pri" onclick="taoPhong()">🏠 Tạo Phòng</button>
+ <div class="row"><span style="color:#444;font-size:13px">— hoặc —</span></div>
+ <div class="row" style="gap:8px">
+  <input class="inp" id="maPhongInput" placeholder="Mã phòng..." style="margin:0;flex:1;text-transform:uppercase" maxlength="6">
+  <button class="btn pri" onclick="vaoPhong()" style="width:auto;padding:14px 20px;margin:0">Vào</button>
+ </div>
+ <div class="flex-1"></div>
 </div>
 
-<div class="app" id="app">
+<!-- Setup -->
+<div class="s" id="s1">
+ <div class="flex-1"></div>
+ <h2>⚙️ Cài đặt</h2>
+ <p class="p">Mã phòng: <strong id="maPhongDisp" style="color:#818cf8;letter-spacing:0.1em"></strong></p>
+ <div class="mb8"><span style="color:#666;font-size:13px">Đã vào:</span> <span id="dsNguoi"></span></div>
+ <div class="mb8"><span style="color:#666;font-size:13px">Số người:</span></div>
+ <div class="row">
+  <button class="adj" onclick="adjTong(-1)">−</button>
+  <span class="num" id="numTong">8</span>
+  <button class="adj" onclick="adjTong(1)">+</button>
+ </div>
+ <div class="row" style="gap:8px">
+  <div class="slot"><div class="lb">👤 Dân</div><div class="ct" id="numDan">4</div></div>
+  <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">2</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
+  <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">2</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
+ </div>
+ <div class="flex-1"></div>
+ <button class="btn pri" onclick="batDau()">🚀 Bắt đầu</button>
+ <button class="btn sec" onclick="roiPhong()">🚪 Rời phòng</button>
+</div>
 
-  <!-- SCREEN: LOBBY -->
-  <div class="screen active lobby" id="screen-lobby">
-    <h1>🕵️ Ai Là<br>Gián Điệp</h1>
-    <p class="sub">Game đoán vai trực tuyến</p>
-    <div class="join-section">
-      <div class="">
-        <div class="" style="display:flex;gap:10px;">
-          <input type="text" id="nameInputMain" placeholder="Nhập tên của bạn..." maxlength="20" autocomplete="off">
-        </div>
-      </div>
-      <button class="btn" onclick="createRoom()">🏠 Tạo Phòng</button>
-      <div class="or-divider">hoặc</div>
-      <div class="room-input-group">
-        <input type="text" id="roomCodeInput" placeholder="Mã phòng..." maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em;">
-        <button class="btn" onclick="joinRoom()">Vào</button>
-      </div>
-    </div>
+<!-- Draw -->
+<div class="s tc" id="s2">
+ <div class="flex-1"></div>
+ <div class="card" onclick="latBai()">
+  <div class="card-in" id="cardIn">
+   <div class="card-face card-bk"><div class="lg">🕵️</div><div class="tp">Chạm để xem</div></div>
+   <div class="card-face card-ft">
+    <div class="rl" id="vaiLabel">Vai trò</div>
+    <div class="rn" id="vaiText">—</div>
+    <div class="sw" id="tuText" style="display:none">—</div>
+    <div class="p" id="goiYText"></div>
+    <button class="btn sec" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px">✅ Đã xong</button>
+   </div>
   </div>
+ </div>
+ <div class="sc" id="thuTuBai">Người 1/8</div>
+ <div class="flex-1"></div>
+</div>
 
-  <!-- SCREEN: SETUP (only host) -->
-  <div class="screen setup" id="screen-setup">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2>⚙️ Cài đặt</h2>
-      <span style="font-size:14px;color:#666;">Mã: <strong id="roomCodeDisplaySetup" style="color:#818cf8;letter-spacing:0.1em;"></strong></span>
-    </div>
-    <div class="small-note">Chia sẻ mã phòng cho bạn bè</div>
-    <div style="margin-top:8px;">
-      <div style="font-size:14px;color:#666;margin-bottom:4px;">Đã vào phòng:</div>
-      <div class="waiting-players" id="setupPlayerList" style="justify-content:flex-start;min-height:40px;"></div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:14px;color:#666;margin-bottom:8px;">Số người chơi</div>
-      <div class="player-count">
-        <button class="adj" onclick="adjustTotal(-1)">−</button>
-        <span class="num" id="totalNum">8</span>
-        <button class="adj" onclick="adjustTotal(1)">+</button>
-      </div>
-    </div>
-    <div>
-      <div style="font-size:14px;color:#666;margin-bottom:8px;">Vai trò</div>
-      <div class="role-slots">
-        <div class="role-slot">
-          <div class="label">👤 Dân</div>
-          <div class="count" id="civilianCount">4</div>
-        </div>
-        <div class="role-slot">
-          <div class="label">🕵️ Gián điệp</div>
-          <div class="count" id="spyCountDisp">2</div>
-          <div class="adj-group">
-            <button class="adj" onclick="adjSpy(-1)">−</button>
-            <button class="adj" onclick="adjSpy(1)">+</button>
-          </div>
-        </div>
-        <div class="role-slot">
-          <div class="label">🎩 Mũ trắng</div>
-          <div class="count" id="whiteHatCountDisp">2</div>
-          <div class="adj-group">
-            <button class="adj" onclick="adjWhiteHat(-1)">−</button>
-            <button class="adj" onclick="adjWhiteHat(1)">+</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:auto;"></div>
-    <button class="start-btn" onclick="startGame()">🚀 Bắt đầu game!</button>
-    <button onclick="leaveRoom()" style="width:100%;padding:12px;background:transparent;border:1px solid #333;border-radius:14px;color:#666;font-family:inherit;font-size:14px;cursor:pointer;margin-top:-12px;">🚪 Rời phòng</button>
-  </div>
+<!-- Waiting -->
+<div class="s tc" id="s3">
+ <div class="flex-1"></div>
+ <h3 id="waitTitle">⏳ Đang chờ...</h3>
+ <p class="p" id="waitSub">...</p>
+ <button class="btn pri" id="waitBtn" style="display:none" onclick="waitAction()">Tiếp</button>
+ <div class="flex-1"></div>
+</div>
 
-  <!-- SCREEN: NAME INPUT (players join names) -->
-  <div class="screen name-input" id="screen-nameinput">
-    <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Phòng: <strong id="roomCodeDispName" style="color:#818cf8;">---</strong></div>
-    <h3>👋 Nhập tên</h3>
-    <p class="sub">Đã vào phòng:</p>
-    <div class="player-list" id="playerListPreview"></div>
-    <input type="text" id="nameJoinInput" placeholder="Tên của bạn..." maxlength="20" autocomplete="off">
-    <button class="btn" onclick="submitJoinName()" style="margin-top:8px;">Vào phòng</button>
-  </div>
+<!-- Vote -->
+<div class="s" id="s4">
+ <div class="tc mb8"><span class="rl" id="vongText">VÒNG 1</span></div>
+ <div class="tc" style="font-size:18px;font-weight:700;margin-bottom:12px">🗳️ Vote</div>
+ <div id="voteList" style="flex:1;overflow-y:auto"></div>
+ <button class="btn pri" id="voteBtn" onclick="boPhieu()" disabled>🗳️ Bỏ phiếu</button>
+</div>
 
-  <!-- SCREEN: WAITING FOR HOST -->
-  <div class="screen waiting-screen" id="screen-waiting-host">
-    <h3>⏳ Chờ chủ phòng bắt đầu...</h3>
-    <p class="sub" id="waitingPlayersText">0 người đã vào phòng</p>
-    <div class="waiting-players" id="waitingPlayersList"></div>
-    <button onclick="leaveRoom()" style="margin-top:auto;width:100%;max-width:280px;padding:14px;background:transparent;border:1px solid #333;border-radius:14px;color:#666;font-family:inherit;font-size:14px;cursor:pointer;">🚪 Rời phòng</button>
-  </div>
+<!-- Result -->
+<div class="s tc" id="s5">
+ <div class="flex-1"></div>
+ <div style="font-size:28px;font-weight:900" id="biLoaiTen">—</div>
+ <div style="padding:10px 24px;border-radius:12px;font-weight:700;display:inline-block;margin:8px 0" id="biLoaiVai">—</div>
+ <p class="p">đã bị loại</p>
+ <div class="flex-1"></div>
+ <button class="btn pri" id="tiepBtn" onclick="tiepTheo()">Tiếp tục</button>
+ <button class="btn sec" id="tiepBtn2" style="display:none" onclick="roiPhong()">Về lobby</button>
+</div>
 
-  <!-- SCREEN: CARD DRAW -->
-  <div class="screen card-screen" id="screen-card">
-    <div class="player-name-tag" id="cardPlayerName">—</div>
-    <div class="card-3d" onclick="flipCard()">
-      <div class="card-inner" id="cardInner">
-        <div class="card-face card-back">
-          <div class="logo">🕵️</div>
-          <div class="tap-text">Chạm để xem vai</div>
-        </div>
-        <div class="card-face card-front">
-          <div class="role-label">Vai trò</div>
-          <div class="role-name" id="cardRole">—</div>
-          <div class="secret-word" id="cardKeyword">—</div>
-          <div class="hint-text" id="cardHint"></div>
-          <button class="done-btn" id="cardDone" onclick="cardDone(event)">✅ Đã xong</button>
-        </div>
-      </div>
-    </div>
-    <div class="card-seq">Người <span id="cardSeqCurrent">1</span>/<span id="cardSeqTotal">8</span></div>
-  </div>
+<!-- Guess -->
+<div class="s tc" id="s6">
+ <div class="flex-1"></div>
+ <h3>🎩 Mũ Trắng</h3>
+ <p class="p">Đoán từ của dân làng!</p>
+ <p style="color:#818cf8;font-size:16px;font-weight:600" id="goiYDoan">—</p>
+ <input class="inp" id="doanInput" placeholder="Nhập từ đoán..." maxlength="30">
+ <button class="btn pri" onclick="guiDoan()">Đoán</button>
+ <div class="flex-1"></div>
+</div>
 
-  <!-- SCREEN: WAITING (after draw done) -->
-  <div class="screen waiting-screen" id="screen-waiting-phase">
-    <h3 id="phaseWaitTitle">⏳ Đang chờ...</h3>
-    <p class="sub" id="phaseWaitSub">Tất cả đã rút bài xong</p>
-    <button class="btn" id="phaseActionBtn" style="display:none;" onclick="phaseAction()">Tiếp theo</button>
-  </div>
-
-  <!-- SCREEN: VOTE -->
-  <div class="screen vote-screen" id="screen-vote">
-    <div class="phase-tag" id="votePhaseTag">VÒNG 1</div>
-    <div class="round-info">🗳️ Bỏ phiếu</div>
-    <div class="player-votes" id="voteList"></div>
-    <button class="vote-btn" id="voteSubmitBtn" onclick="submitVote()" disabled>Bỏ phiếu</button>
-  </div>
-
-  <!-- SCREEN: RESULT -->
-  <div class="screen result-screen" id="screen-result">
-    <div class="eliminated-name" id="eliminatedName">—</div>
-    <div class="role-reveal" id="eliminatedRole">—</div>
-    <p class="sub">đã bị loại</p>
-    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;">
-      <button class="btn primary" id="resultNextBtn" onclick="resultNext()">Tiếp tục</button>
-      <button class="btn secondary" id="resultNextBtn2" style="display:none;" onclick="resultNext()">Tiếp tục</button>
-    </div>
-  </div>
-
-  <!-- SCREEN: WHITE HAT GUESS -->
-  <div class="screen guess-screen" id="screen-guess">
-    <h3>🎩 Mũ Trắng</h3>
-    <div class="hint">Bạn bị vote ra. Hãy đoán từ của dân làng!</div>
-    <div style="font-size:13px;color:#666;">Gợi ý bạn có: <strong id="guessHint" style="color:#818cf8;"></strong></div>
-    <input type="text" id="guessInput" placeholder="Nhập từ đoán..." maxlength="30" autocomplete="off">
-    <button class="btn" onclick="submitGuess()">Đoán</button>
-  </div>
-
-  <!-- SCREEN: GAME OVER -->
-  <div class="screen gameover-screen" id="screen-gameover">
-    <div class="winner-icon" id="winnerIcon">🏆</div>
-    <div class="winner-text" id="winnerText">Dân làng thắng!</div>
-    <p class="sub" id="winnerSub">Đã vote ra hết gián điệp</p>
-    <button class="btn" onclick="resetToLobby()">🏠 Về phòng chờ</button>
-  </div>
-
-  <!-- SCREEN: ERROR / FALLBACK -->
-  <div class="screen waiting-screen" id="screen-error">
-    <h3>⚠️</h3>
-    <p class="sub" id="errorText">Có lỗi xảy ra</p>
-    <button class="btn" onclick="resetToLobby()">Quay lại</button>
-  </div>
-
+<!-- Game Over -->
+<div class="s tc" id="s7">
+ <div class="flex-1"></div>
+ <div style="font-size:64px" id="iconThang">🏆</div>
+ <div style="font-size:28px;font-weight:900" id="textThang">—</div>
+ <p class="p" id="subThang"></p>
+ <div class="flex-1"></div>
+ <button class="btn sec" onclick="roiPhong()">🏠 Về phòng chờ</button>
+</div>
 </div>
 
 <script>
-// === FIREBASE CONFIG ===
 var firebaseConfig = {
   apiKey: "AIzaSyAFpnzjUdHCL_j7CWsDeJvGVXcr2wOryow",
   authDomain: "ai-la-gian-diep.firebaseapp.com",
@@ -593,715 +165,326 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
-// === STATE ===
-var wordPairs = [];
+var wp = [];
 var myId = null;
 var myName = '';
-var myRole = null;
 var roomRef = null;
-var roomCode = '';
-var gameState = {};
-var selectedVote = null;
-var isHost = false;
-var hostedSetupReady = false;
-var roomValueListener = null;
-var roomPlayersListener = null;
+var maPhong = '';
+var gs = {};
+var binhChon = null;
+var chuPhong = false;
+var chuanBiXong = false;
+var valueLis = null;
+var playerLis = null;
 
-var deviceId = localStorage.getItem('deviceId');
-if(!deviceId) {
-  deviceId = 'dev_' + Math.random().toString(36).substring(2,10) + Date.now().toString(36);
-  localStorage.setItem('deviceId', deviceId);
-}
+var deviceId = localStorage.getItem('devId');
+if(!deviceId) { deviceId = 'd' + Math.random().toString(36).substr(2,8) + Date.now().toString(36); localStorage.setItem('devId', deviceId); }
 
-// Load word pairs
-function loadWords() {
-  fetch('word_pairs.json').then(function(resp) { return resp.json(); })
-  .then(function(data) { wordPairs = data; })
-  .catch(function() { wordPairs = [["con chó","con mèo","có bốn chân, hay nuôi trong nhà"]]; });
-}
-loadWords();
+fetch('word_pairs.json').then(function(r){return r.json()}).then(function(d){wp=d}).catch(function(){wp=[['a','b','c']]});
+function capNN(){return wp[Math.floor(Math.random()*wp.length)]}
+function randId(){return Math.random().toString(36).substr(2,8)+Date.now().toString(36)}
+function maPhongMoi(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='';for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r}
+function hien(id){var a=document.querySelectorAll('.s');for(var i=0;i<a.length;i++)a[i].classList.remove('a');document.getElementById(id).classList.add('a')}
+function xao(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function demKh(obj){var n=0;for(var k in obj)n++;return n}
+function esc(s){return (s||'').replace(/[&<>]/g,'')}
 
-function randPair() {
-  return wordPairs[Math.floor(Math.random() * wordPairs.length)];
-}
-function randId() {
-  return Math.random().toString(36).substring(2,10) + Date.now().toString(36);
-}
-function roomCodeGen() {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  var r = '';
-  for(var i=0;i<6;i++) {
-    r = r + chars[Math.floor(Math.random() * chars.length)];
-  }
-  return r;
-}
-function showScreen(id) {
-  var all = document.querySelectorAll('.screen');
-  for(var i=0;i<all.length;i++) { all[i].classList.remove('active'); }
-  document.getElementById(id).classList.add('active');
-}
-function shuffle(arr) {
-  for(var i=arr.length-1;i>0;i--) {
-    var j = Math.floor(Math.random() * (i+1));
-    var tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
-  }
-  return arr;
-}
-function esc(s) { return (s || '').replace(/[&<>]/g, ''); }
-
-// === LOBBY ===
-function createRoom() {
-  var name = (document.getElementById('nameInputMain').value || '').trim();
-  if(!name) { alert('Nhập tên của bạn!'); return; }
-  myName = name;
-  myId = randId();
-  roomCode = roomCodeGen();
-  roomRef = db.ref('rooms/' + roomCode);
-
-  var pair = randPair();
+// CREATE ROOM
+function taoPhong() {
+  var ten = document.getElementById('nameInput').value.trim();
+  if(!ten){alert('Nhập tên!');return}
+  myName = ten; myId = randId(); maPhong = maPhongMoi();
+  roomRef = db.ref('rooms/' + maPhong);
   var data = {
-    host: myId,
-    hostName: name,
-    total: 8,
-    spies: 2,
-    whiteHats: 2,
-    pair: pair,
-    status: 'setup',
-    phase: 'wait',
-    round: 0,
-    currentTurn: -1
+    host: myId, hostName: ten, total: 8, spies: 2, whiteHats: 2,
+    status: 'setup', pair: capNN(), players: {}, eliminated: {},
+    turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
   };
-  var p = {};
-  p[myId] = { name: name, joined: true, deviceId: deviceId };
-  data.players = p;
-  data.eliminated = {};
-  data.turnOrder = [];
-  data.cardsSeen = {};
-  data.votes = {};
-  
-  roomRef.set(data).then(function() {
-    isHost = true;
-    myRole = 'host';
-    gameState = data;
-    listenRoom();
-    document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
-    hostedSetupReady = true;
-    updateSetupUI();
-    showScreen('screen-setup');
-  }).catch(function(err) {
-    alert('Lỗi Firebase: ' + err.message);
-  });
+  data.players[myId] = { name: ten, deviceId: deviceId };
+  roomRef.set(data).then(function(){
+    chuPhong = true; gs = data; langNghe();
+    document.getElementById('maPhongDisp').textContent = maPhong;
+    capNhatUI(); hien('s1');
+  }).catch(function(e){alert('Lỗi: '+e.message)});
 }
 
-function joinRoom() {
-  var name = (document.getElementById('nameInputMain').value || '').trim();
-  if(!name) { alert('Nhập tên của bạn!'); return; }
-  myName = name;
-  var code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-  if(!code || code.length < 4) { alert('Nhập mã phòng!'); return; }
-  roomCode = code;
-  roomRef = db.ref('rooms/' + code);
-
-  roomRef.once('value').then(function(snap) {
-    if(!snap.exists()) { alert('Không tìm thấy phòng!'); return; }
+// JOIN ROOM
+function vaoPhong() {
+  var ten = document.getElementById('nameInput').value.trim();
+  if(!ten){alert('Nhập tên!');return}
+  myName = ten;
+  var code = document.getElementById('maPhongInput').value.trim().toUpperCase();
+  if(!code||code.length<4){alert('Nhập mã phòng!');return}
+  maPhong = code; roomRef = db.ref('rooms/' + code);
+  roomRef.once('value').then(function(snap){
+    if(!snap.exists()){alert('Không có phòng!');return}
     var g = snap.val();
-    if(g.status !== 'setup') { alert('Game đã bắt đầu!'); return; }
-    
-    var players = g.players || {};
-    for(var k in players) {
-      if(players[k].deviceId === deviceId) {
-        alert('Bạn đã vào phòng này rồi!'); return;
-      }
-    }
-    
-    var numPlayers = 0;
-    for(var pk in players) { numPlayers++; }
-    if(numPlayers >= (g.total || 8)) { alert('Phòng đầy!'); return; }
-
+    if(g.status!=='setup'){alert('Game đã bắt đầu!');return}
+    var pl = g.players||{};
+    for(var k in pl){if(pl[k].deviceId===deviceId){alert('Bạn đã trong phòng!');return}}
+    if(demKh(pl) >= (g.total||8)){alert('Phòng đầy!');return}
     myId = randId();
-    myRole = 'player';
-    roomRef.child('players/' + myId).set({ name: name, joined: true, deviceId: deviceId });
-    listenRoom();
-    document.getElementById('roomCodeDispName').textContent = code;
-    document.getElementById('nameJoinInput').value = name;
-    showScreen('screen-nameinput');
+    roomRef.child('players/'+myId).set({name:ten,deviceId:deviceId});
+    langNghe(); hien('s3');
+    document.getElementById('waitTitle').textContent = '⏳ Đã vào phòng!';
+    document.getElementById('waitSub').textContent = 'Chờ chủ phòng bắt đầu...';
   });
 }
 
-// === ROOM LISTENER ===
-function listenRoom() {
-  if(roomValueListener) { roomRef.off('value', roomValueListener); }
-  if(roomPlayersListener) { roomRef.child('players').off('value', roomPlayersListener); }
-  
-  roomValueListener = roomRef.on('value', function(snap) {
-    if(!snap.exists()) { return; }
-    gameState = snap.val();
-    onRoomUpdate();
+// LISTENERS
+function langNghe() {
+  if(valueLis) roomRef.off('value', valueLis);
+  if(playerLis) roomRef.child('players').off('value', playerLis);
+  valueLis = roomRef.on('value', function(snap){
+    if(!snap.exists()) return;
+    gs = snap.val(); capNhatGame();
   });
-  
-  roomPlayersListener = roomRef.child('players').on('value', function(snap) {
-    if(!snap.exists() || !gameState) { return; }
-    var newPlayers = snap.val();
-    gameState.players = newPlayers;
-    console.log('Players updated:', JSON.stringify(newPlayers).substring(0,100));
-    if(gameState.status === 'setup') {
-      updateSetupUI();
-    }
+  playerLis = roomRef.child('players').on('value', function(snap){
+    if(!snap.exists()||!gs) return;
+    gs.players = snap.val();
+    if(gs.status==='setup') capNhatUI();
   });
 }
 
-function onRoomUpdate() {
-  var g = gameState;
-  if(!g) { return; }
-  
-  if(g.status === 'setup') {
-    if(isHost) {
-      updateSetupUI();
-      if(!hostedSetupReady) { showScreen('screen-setup'); hostedSetupReady = true; }
-    } else {
-      var players = g.players || {};
-      var names = [];
-      for(var k in players) { names.push('<span class="waiting-player-chip">' + esc(players[k].name) + '</span>'); }
-      document.getElementById('waitingPlayersText').textContent = countPlayers(players) + '/' + (g.total || '?') + ' người';
-      document.getElementById('waitingPlayersList').innerHTML = names.join('');
-      showScreen('screen-waiting-host');
-    }
-    return;
+// UPDATE
+function capNhatUI() {
+  if(!gs) return;
+  document.getElementById('numTong').textContent = gs.total||0;
+  var sp = gs.spies||0, wh = gs.whiteHats||0;
+  document.getElementById('numDan').textContent = (gs.total||0) - sp - wh;
+  document.getElementById('numSpy').textContent = sp;
+  document.getElementById('numHat').textContent = wh;
+  var pl = gs.players||{}, arr = [];
+  for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+'</span>');
+  document.getElementById('dsNguoi').innerHTML = arr.join('')||'<span style="color:#444">Chưa có ai</span>';
+}
+
+function capNhatGame() {
+  var g = gs; if(!g) return;
+  if(g.status==='setup'){
+    if(chuPhong){capNhatUI();if(!chuanBiXong){hien('s1');chuanBiXong=true}}
+    else{hien('s3');document.getElementById('waitTitle').textContent='⏳ Đợi chủ phòng...'}
   }
-  if(g.status === 'naming' && !isHost) {
-    var players = g.players || {};
-    var names = [];
-    for(var k in players) { names.push('<span class="waiting-player-chip">' + esc(players[k].name) + '</span>'); }
-    document.getElementById('waitingPlayersText').textContent = countPlayers(players) + '/' + (g.total || '?') + ' người';
-    document.getElementById('waitingPlayersList').innerHTML = names.join('');
-    showScreen('screen-waiting-host');
-    return;
-  }
-  if(g.status === 'drawing') { handleDrawing(); return; }
-  if(g.status === 'phase') { handlePhase(); return; }
-  if(g.status === 'voting') { handleVoting(); return; }
-  if(g.status === 'result') { handleResult(); return; }
-  if(g.status === 'guess') { handleGuess(); return; }
-  if(g.status === 'gameover') { handleGameOver(); return; }
+  else if(g.status==='drawing') xuLyRutBai();
+  else if(g.status==='phase') xuLyPhase();
+  else if(g.status==='voting') xuLyVote();
+  else if(g.status==='result') xuLyKetQua();
+  else if(g.status==='guess') xuLyDoan();
+  else if(g.status==='gameover') xuLyGameOver();
 }
 
-function countPlayers(players) {
-  var n = 0;
-  for(var k in players) { if(players[k] && players[k].joined) { n++; } }
-  return n;
-}
-
-// === SETUP ===
-function updateSetupUI() {
-  if(!gameState) { return; }
-  var total = gameState.total || 0;
-  var spies = gameState.spies || 0;
-  var wh = gameState.whiteHats || 0;
-  document.getElementById('totalNum').textContent = total;
-  document.getElementById('civilianCount').textContent = total - spies - wh;
-  document.getElementById('spyCountDisp').textContent = spies;
-  document.getElementById('whiteHatCountDisp').textContent = wh;
-  document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
-  
-  var players = gameState.players || {};
-  var names = [];
-  for(var k in players) {
-    names.push('<span class="waiting-player-chip">' + esc(players[k].name) + '</span>');
-  }
-  document.getElementById('setupPlayerList').innerHTML = names.join('') || '<span style="color:#444;font-size:13px;">Chưa có ai...</span>';
-}
-
-function adjustTotal(d) {
-  roomRef.once('value').then(function(snap) {
-    var g = snap.val();
-    if(!g) { return; }
-    var n = (g.total || 8) + d;
-    if(n < 4) { n = 4; }
-    if(n > 20) { n = 20; }
-    var spies = Math.max(1, Math.floor(n * 0.25));
-    var wh = Math.max(1, Math.floor(n * 0.25));
-    if(spies + wh >= n) { spies = Math.max(1, spies-1); wh = Math.max(0, wh-1); }
-    roomRef.update({ total: n, spies: spies, whiteHats: wh });
+// SETUP ACTIONS
+function adjTong(d) {
+  roomRef.once('value').then(function(snap){
+    var g = snap.val(); if(!g) return;
+    var n = (g.total||8)+d; if(n<4)n=4;if(n>20)n=20;
+    var s=Math.max(1,Math.floor(n*0.25)), w=Math.max(1,Math.floor(n*0.25));
+    if(s+w>=n){s=Math.max(1,s-1);w=Math.max(0,w-1)}
+    roomRef.update({total:n,spies:s,whiteHats:w});
   });
 }
-
 function adjSpy(d) {
-  roomRef.once('value').then(function(snap) {
-    var g = snap.val();
-    if(!g) { return; }
-    var n = (g.spies || 0) + d;
-    if(n < 0) { n = 0; }
-    var max = (g.total || 8) - (g.whiteHats || 0) - 1;
-    if(n > max) { n = max; }
-    roomRef.update({ spies: n });
+  roomRef.once('value').then(function(snap){
+    var g=snap.val();if(!g)return;
+    var n=(g.spies||0)+d;if(n<0)n=0;
+    var m=(g.total||8)-(g.whiteHats||0)-1;if(n>m)n=m;
+    roomRef.update({spies:n});
+  });
+}
+function adjHat(d) {
+  roomRef.once('value').then(function(snap){
+    var g=snap.val();if(!g)return;
+    var n=(g.whiteHats||0)+d;if(n<0)n=0;
+    var m=(g.total||8)-(g.spies||0)-1;if(n>m)n=m;
+    roomRef.update({whiteHats:n});
   });
 }
 
-function adjWhiteHat(d) {
-  roomRef.once('value').then(function(snap) {
-    var g = snap.val();
-    if(!g) { return; }
-    var n = (g.whiteHats || 0) + d;
-    if(n < 0) { n = 0; }
-    var max = (g.total || 8) - (g.spies || 0) - 1;
-    if(n > max) { n = max; }
-    roomRef.update({ whiteHats: n });
-  });
+function batDau() {
+  if(!chuPhong||!gs) return;
+  var g = gs;
+  if((g.spies||0)+(g.whiteHats||0)>=(g.total||8)){alert('Quá nhiều gián điệp/mũ trắng!');return}
+  if(demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
+  roomRef.update({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
 
-function startGame() {
-  if(!isHost) { return; }
-  var g = gameState;
-  if(!g) { return; }
-  if((g.spies || 0) + (g.whiteHats || 0) >= (g.total || 8)) {
-    alert('Quá nhiều gián điệp/mũ trắng!');
-    return;
-  }
-  var playerCount = 0;
-  for(var k in (g.players || {})) { playerCount++; }
-  if(playerCount < 2) { alert('Cần ít nhất 2 người!'); return; }
-  
-  roomRef.update({ status: 'naming', phase: 'join' }).then(function() {
-    setTimeout(function() { startDrawingPhase(); }, 500);
-  }).catch(function(err) {
-    alert('Lỗi: ' + err.message);
-  });
-}
-
-// === START DRAWING ===
-function startDrawingPhase() {
-  if(!isHost) { return; }
-  var g = Object.assign({}, gameState);
-  var players = [];
-  for(var k in (g.players || {})) { players.push(k); }
-  if(players.length < 2) { alert('Cần ít nhất 2 người!'); return; }
-  
-  var pair = g.pair || randPair();
+// START DRAW
+function batDauVe() {
+  if(!chuPhong) return;
+  var g = gs; if(!g) return;
+  var ps = []; for(var k in (g.players||{})) ps.push(k);
+  if(ps.length<2) return;
+  var pair = g.pair || capNN();
   var roles = [];
-  for(var i=0; i < (g.spies || 0); i++) { roles.push('spy'); }
-  for(var i=0; i < (g.whiteHats || 0); i++) { roles.push('white_hat'); }
-  while(roles.length < players.length) { roles.push('civilian'); }
-  shuffle(roles);
-  
-  // Build turnOrder
-  var turnOrder = players.slice();
-  shuffle(turnOrder);
-  
-  var assignments = {};
-  for(var i=0; i<players.length; i++) {
-    var pid = turnOrder[i];
-    var role = roles[i] || 'civilian';
-    var word = '';
-    var hint = '';
-    if(role === 'civilian') {
-      word = pair[0];
-    } else if(role === 'spy') {
-      word = pair[1];
-    } else {
-      hint = pair[2] || 'gợi ý';
-    }
-    assignments[pid] = { role: role, word: word, hint: hint, seen: false };
+  for(var i=0;i<(g.spies||0);i++) roles.push('spy');
+  for(var i=0;i<(g.whiteHats||0);i++) roles.push('white_hat');
+  while(roles.length<ps.length) roles.push('civilian');
+  xao(roles);
+  var to = ps.slice(); xao(to);
+  var as = {};
+  for(var i=0;i<ps.length;i++){
+    var pid = to[i], role = roles[i]||'civilian', w='', h='';
+    if(role==='civilian') w=pair[0];
+    else if(role==='spy') w=pair[1];
+    else h=pair[2]||'gợi ý';
+    as[pid] = {role:role,word:w,hint:h};
   }
-  
-  roomRef.update({
-    status: 'drawing',
-    phase: 'draw',
-    assignments: assignments,
-    turnOrder: turnOrder,
-    currentTurn: 0,
-    cardsSeen: {},
-    round: 0,
-    eliminated: {},
-    pair: pair
-  });
+  roomRef.update({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
 }
 
-// === DRAWING ===
-function handleDrawing() {
-  var g = gameState;
-  if(!g.assignments) { return; }
-  var myAssign = g.assignments[myId];
-  if(!myAssign) { return; }
-  
-  var turnOrder = g.turnOrder || [];
-  var total = turnOrder.length;
-  var currentIdx = g.currentTurn || 0;
-  var currentPid = turnOrder[currentIdx];
-  var isMyTurn = (currentPid === myId);
-  var alreadySeen = g.cardsSeen && g.cardsSeen[myId];
-  
-  if(isMyTurn && !alreadySeen) {
-    document.getElementById('cardPlayerName').textContent = myName;
-    document.getElementById('cardSeqCurrent').textContent = currentIdx + 1;
-    document.getElementById('cardSeqTotal').textContent = total;
-    
-    var cRole = document.getElementById('cardRole');
-    var cWord = document.getElementById('cardKeyword');
-    var cHint = document.getElementById('cardHint');
-    cRole.className = 'role-name';
-    
-    if(myAssign.role === 'civilian') {
-      cRole.textContent = 'Người Dân';
-      cRole.className = 'role-name civilian';
-      cWord.textContent = myAssign.word;
-      cWord.style.display = 'block';
-      cHint.textContent = 'Giữ bí mật!';
-    } else if(myAssign.role === 'spy') {
-      cRole.textContent = 'Gián Điệp';
-      cRole.className = 'role-name spy';
-      cWord.textContent = myAssign.word;
-      cWord.style.display = 'block';
-      cHint.textContent = 'Hãy trà trộn!';
-    } else {
-      cRole.textContent = 'Mũ Trắng';
-      cRole.className = 'role-name white-hat';
-      cWord.style.display = 'none';
-      cHint.textContent = 'Gợi ý: ' + myAssign.hint;
-    }
-    
-    document.getElementById('cardInner').classList.remove('flipped');
-    showScreen('screen-card');
+// DRAW
+function xuLyRutBai() {
+  var g=gs; if(!g.assignments) return;
+  var a=g.assignments[myId]; if(!a) return;
+  var to=g.turnOrder||[], idx=g.currentTurn||0, pid=to[idx];
+  var luotToi = (pid===myId);
+  var daXem = g.cardsSeen && g.cardsSeen[myId];
+  if(luotToi && !daXem){
+    document.getElementById('vaiLabel').textContent = 'Vai trò';
+    var vt = document.getElementById('vaiText');
+    if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
+    else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
+    else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
+    var tw = document.getElementById('tuText');
+    if(a.word){tw.style.display='block';tw.textContent=a.word}
+    else tw.style.display='none';
+    document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
+    document.getElementById('cardIn').classList.remove('f');
+    document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length;
+    hien('s2');
   } else {
-    showScreen('screen-waiting-host');
-    document.getElementById('waitingPlayersText').textContent = 'Đang rút bài... (' + currentIdx + '/' + total + ')';
+    hien('s3'); document.getElementById('waitTitle').textContent='⏳ Đang rút bài...';
+    document.getElementById('waitSub').textContent=idx+'/'+to.length;
   }
 }
 
-function flipCard() {
-  document.getElementById('cardInner').classList.add('flipped');
-}
+function latBai(){document.getElementById('cardIn').classList.add('f')}
+function daXong(e){e.stopPropagation();roomRef.child('cardsSeen/'+myId).set(true);hien('s3');
+  document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
 
-function cardDone(e) {
-  e.stopPropagation();
-  roomRef.child('cardsSeen/' + myId).set(true);
-  var g = gameState;
-  var seen = g.cardsSeen || {};
-  var seenCount = 0;
-  for(var k in seen) { seenCount++; }
-  var currentIdx = g.currentTurn || 0;
-  if(seenCount <= currentIdx) {
-    roomRef.child('currentTurn').set(currentIdx + 1);
-  }
-  document.getElementById('phaseWaitTitle').textContent = '✅ Đã xem!';
-  document.getElementById('phaseWaitSub').textContent = 'Chờ lượt tiếp theo...';
-  document.getElementById('phaseActionBtn').style.display = 'none';
-  showScreen('screen-waiting-phase');
-}
-
-// === PHASE ===
-function handlePhase() {
-  var g = gameState;
-  if(g.phase === 'draw_done') {
-    if(isHost) {
-      document.getElementById('phaseWaitTitle').textContent = '📋 Tất cả đã rút bài!';
-      document.getElementById('phaseWaitSub').textContent = 'Bắt đầu vòng nói';
-      document.getElementById('phaseActionBtn').style.display = 'block';
-      document.getElementById('phaseActionBtn').textContent = 'Bắt đầu vote vòng 1';
-      showScreen('screen-waiting-phase');
-    } else {
-      document.getElementById('phaseWaitTitle').textContent = '📋 Đã rút xong!';
-      document.getElementById('phaseWaitSub').textContent = 'Chờ chủ phòng bắt đầu...';
-      document.getElementById('phaseActionBtn').style.display = 'none';
-      showScreen('screen-waiting-phase');
-    }
-  } else if(g.phase === 'vote_round') {
-    handleVoting();
+// PHASE
+function xuLyPhase(){
+  var g=gs;
+  if(g.phase==='draw_done'){
+    hien('s3');
+    if(chuPhong){document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
+      document.getElementById('waitSub').textContent='Bắt đầu vote vòng 1';
+      document.getElementById('waitBtn').style.display='block';document.getElementById('waitBtn').textContent='🗳️ Vote'}
+    else{document.getElementById('waitTitle').textContent='📋 Đã rút xong!';
+      document.getElementById('waitSub').textContent='Chờ chủ phòng...';document.getElementById('waitBtn').style.display='none'}
   }
 }
+function waitAction(){if(!chuPhong)return;roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}})}
 
-function phaseAction() {
-  if(!isHost) { return; }
-  var g = gameState;
-  if(g.phase === 'draw_done') {
-    roomRef.update({ status: 'voting', phase: 'vote_round', round: 1, votes: {} });
+// VOTE
+function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<o.length;i++){if(!e[o[i]])r.push(o[i])}return r}
+function xuLyVote(){
+  var g=gs,r=g.round||1,v=g.votes||{},al=conSong(g);
+  document.getElementById('vongText').textContent='VÒNG '+r;
+  var list=document.getElementById('voteList');list.innerHTML='';binhChon=null;
+  for(var i=0;i<al.length;i++){
+    var pid=al[i],p=g.players[pid];if(!p)continue;
+    var vf=0;for(var vk in v){if(v[vk]===pid)vf++}
+    var d=document.createElement('div');
+    d.style.cssText='display:flex;align-items:center;gap:10px;background:#141414;border:1px solid #222;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer';
+    d.innerHTML='<span style="flex:1;font-weight:600">'+esc(p.name)+'</span><span style="color:#666;font-size:13px">'+vf+' phiếu</span><span style="width:20px;height:20px;border-radius:50%;border:2px solid #444;flex-shrink:0"></span>';
+    (function(p2){d.onclick=function(){
+      if(v[myId]) return;
+      var sl=document.querySelectorAll('#voteList > div');for(var x=0;x<sl.length;x++)sl[x].style.borderColor='#222';
+      this.style.borderColor='#6366f1';binhChon=p2;document.getElementById('voteBtn').disabled=false;
+    }})(pid);
+    list.appendChild(d);
   }
+  if(v[myId]){document.getElementById('voteBtn').disabled=true;document.getElementById('voteBtn').textContent='✅ Đã vote'}
+  else{document.getElementById('voteBtn').textContent='🗳️ Bỏ phiếu';document.getElementById('voteBtn').disabled=true}
+  var dv=true;for(var i=0;i<al.length;i++){if(!v[al[i]]){dv=false;break}}
+  if(dv&&al.length>0)tinhLoai(g);
+  hien('s4');
+}
+function boPhieu(){if(!binhChon)return;roomRef.child('votes/'+myId).set(binhChon)}
+function tinhLoai(g){
+  var al=conSong(g),v=g.votes||{},tl={};
+  for(var i=0;i<al.length;i++)tl[al[i]]=0;
+  for(var vk in v){if(tl[v[vk]]!==undefined)tl[v[vk]]++}
+  var mv=0,el=null;for(var p in tl){if(tl[p]>mv){mv=tl[p];el=p}}
+  if(!el)return;
+  var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
+  if(ties.length>1)return;
+  var role=(gs.assignments[el]&&gs.assignments[el].role)||'unknown';
+  var ud={};ud['eliminated/'+el]=true;ud.status='result';ud.lastEliminated=el;ud.lastRole=role;
+  roomRef.update(ud);
 }
 
-// === VOTING ===
-function getAlivePlayers(g) {
-  var order = g.turnOrder || [];
-  var alive = [];
-  var elim = g.eliminated || {};
-  for(var i=0; i<order.length; i++) {
-    if(!elim[order[i]]) { alive.push(order[i]); }
-  }
-  return alive;
+// RESULT
+function xuLyKetQua(){
+  var g=gs,pid=g.lastEliminated,p=(g.players||{})[pid],role=g.lastRole;
+  document.getElementById('biLoaiTen').textContent=p?p.name:'—';
+  var el=document.getElementById('biLoaiVai');
+  if(role==='civilian'){el.textContent='👤 Người Dân';el.style.background='rgba(34,197,94,0.1)';el.style.color='#22c55e';el.style.border='1px solid rgba(34,197,94,0.2)'}
+  else if(role==='spy'){el.textContent='🕵️ Gián Điệp';el.style.background='rgba(239,68,68,0.1)';el.style.color='#ef4444';el.style.border='1px solid rgba(239,68,68,0.2)'}
+  else{el.textContent='🎩 Mũ Trắng';el.style.background='rgba(129,140,248,0.1)';el.style.color='#818cf8';el.style.border='1px solid rgba(129,140,248,0.2)'}
+  if(role==='white_hat'){document.getElementById('tiepBtn').style.display='none';document.getElementById('tiepBtn2').style.display='none';
+    setTimeout(function(){roomRef.update({status:'guess',guessPlayer:pid})},800)}
+  else{document.getElementById('tiepBtn').style.display='block';document.getElementById('tiepBtn').textContent='Tiếp tục'}
+  hien('s5');
+}
+function tiepTheo(){
+  var g=gs,a=g.assignments||{},al=conSong(g);
+  var sp=0,cv=0,ic=0;
+  for(var p in a){if(a[p].role==='civilian')ic++}
+  for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
+  if(sp>0&&cv<=Math.floor(ic*0.4)){roomRef.update({status:'gameover',winner:'spy'});return}
+  if(sp===0){roomRef.update({status:'gameover',winner:'civilian'});return}
+  var rd=(g.round||1)+1;roomRef.update({status:'voting',phase:'vote_round',round:rd,votes:{}})
 }
 
-function handleVoting() {
-  var g = gameState;
-  var round = g.round || 1;
-  var alivePlayers = getAlivePlayers(g);
-  
-  document.getElementById('votePhaseTag').textContent = 'VÒNG ' + round;
-  
-  var list = document.getElementById('voteList');
-  list.innerHTML = '';
-  selectedVote = null;
-  
-  var votes = g.votes || {};
-  
-  for(var i=0; i<alivePlayers.length; i++) {
-    var pid = alivePlayers[i];
-    var p = g.players[pid];
-    if(!p) { continue; }
-    
-    // count votes for this player
-    var votesFor = 0;
-    for(var vk in votes) {
-      if(votes[vk] === pid) { votesFor++; }
-    }
-    
-    var div = document.createElement('div');
-    div.className = 'vote-player';
-    div.setAttribute('data-pid', pid);
-    div.innerHTML =
-      '<span class="name">' + esc(p.name) + '</span>' +
-      '<span class="votes-count">' + votesFor + ' phiếu</span>' +
-      '<span class="checkbox"></span>';
-    
-    div.onclick = function() {
-      if(gameState.votes && gameState.votes[myId]) { return; }
-      var selectedEls = document.querySelectorAll('.vote-player.selected');
-      for(var x=0; x<selectedEls.length; x++) { selectedEls[x].classList.remove('selected'); }
-      this.classList.add('selected');
-      selectedVote = this.getAttribute('data-pid');
-      document.getElementById('voteSubmitBtn').disabled = false;
-    };
-    list.appendChild(div);
-  }
-  
-  if(votes[myId]) {
-    var selectedEls = document.querySelectorAll('.vote-player.selected');
-    for(var x=0; x<selectedEls.length; x++) { selectedEls[x].classList.remove('selected'); }
-    document.getElementById('voteSubmitBtn').disabled = true;
-    document.getElementById('voteSubmitBtn').textContent = '✅ Đã bỏ phiếu';
-  } else {
-    document.getElementById('voteSubmitBtn').textContent = '🗳️ Bỏ phiếu';
-    document.getElementById('voteSubmitBtn').disabled = true;
-  }
-  
-  // Check if all alive players voted
-  var allVoted = true;
-  for(var i=0; i<alivePlayers.length; i++) {
-    if(!votes[alivePlayers[i]]) { allVoted = false; break; }
-  }
-  if(allVoted && alivePlayers.length > 0) {
-    determineElimination(g);
-  }
-  
-  showScreen('screen-vote');
+// GUESS
+function xuLyDoan(){
+  var g=gs;
+  if(g.guessPlayer===myId){document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';hien('s6')}
+  else{hien('s3');document.getElementById('waitTitle').textContent='🎩 Mũ Trắng đang đoán...';document.getElementById('waitBtn').style.display='none'}
+}
+function guiDoan(){
+  var g=gs,gus=document.getElementById('doanInput').value.trim().toLowerCase();
+  if(!gus){alert('Nhập từ!');return}
+  var cw=(g.pair?g.pair[0]:'').toLowerCase();
+  var match=(gus.indexOf(cw)!==-1)||(cw.indexOf(gus)!==-1);
+  roomRef.update({status:'gameover',winner:match?'white_hat':'none'});
 }
 
-function submitVote() {
-  if(!selectedVote || !myId) { return; }
-  roomRef.child('votes/' + myId).set(selectedVote);
-  document.getElementById('voteSubmitBtn').disabled = true;
-  document.getElementById('voteSubmitBtn').textContent = '✅ Đã bỏ phiếu';
+// GAME OVER
+function xuLyGameOver(){
+  var g=gs,w=g.winner||'none';
+  var icon='🏆',text='',sub='',cls='';
+  if(w==='civilian'){icon='👤';text='Dân làng thắng!';sub='Đã vote hết gián điệp'}
+  else if(w==='spy'){icon='🕵️';text='Gián điệp thắng!';sub='Dân làng không đủ số lượng'}
+  else if(w==='white_hat'){icon='🎩';text='Mũ Trắng thắng!';sub='Đã đoán đúng từ của dân làng'}
+  else{icon='💀';text='Mũ trắng đoán sai!';sub='Không ai thắng'}
+  document.getElementById('iconThang').textContent=icon;
+  document.getElementById('textThang').textContent=text;
+  document.getElementById('subThang').textContent=sub;
+  hien('s7');
 }
 
-function determineElimination(g) {
-  var alive = getAlivePlayers(g);
-  var votes = g.votes || {};
-  var tally = {};
-  for(var i=0; i<alive.length; i++) { tally[alive[i]] = 0; }
-  for(var vk in votes) {
-    if(tally[votes[vk]] !== undefined) { tally[votes[vk]]++; }
-  }
-  
-  var maxVotes = 0;
-  var eliminated = null;
-  for(var pid in tally) {
-    if(tally[pid] > maxVotes) { maxVotes = tally[pid]; eliminated = pid; }
-  }
-  if(!eliminated) { return; }
-  
-  // Check tie
-  var ties = [];
-  for(var pid in tally) {
-    if(tally[pid] === maxVotes) { ties.push(pid); }
-  }
-  if(ties.length > 1) {
-    roomRef.update({ phase: 'tie' });
-    return;
-  }
-  
-  updateElimination(g, eliminated);
+// LEAVE
+function roiPhong(){
+  if(roomRef){roomRef.off('value');roomRef.child('players').off('value');
+    if(chuPhong)roomRef.remove().catch(function(){});
+    else if(myId)roomRef.child('players/'+myId).remove().catch(function(){})}
+  roomRef=null;myId=null;chuPhong=false;chuanBiXong=false;binhChon=null;gs={};
+  document.getElementById('nameInput').value='';document.getElementById('maPhongInput').value='';
+  document.getElementById('doanInput').value='';
+  hien('s0');
 }
 
-function updateElimination(g, eliminatedPid) {
-  var a = g.assignments || {};
-  var role = (a[eliminatedPid] && a[eliminatedPid].role) || 'unknown';
-  var updateData = {};
-  updateData['eliminated/' + eliminatedPid] = true;
-  updateData.status = 'result';
-  updateData.lastEliminated = eliminatedPid;
-  updateData.lastRole = role;
-  roomRef.update(updateData);
-}
-
-// === RESULT ===
-function handleResult() {
-  var g = gameState;
-  var pid = g.lastEliminated;
-  var p = (g.players || {})[pid];
-  var role = g.lastRole;
-  
-  document.getElementById('eliminatedName').textContent = p ? p.name : '—';
-  var roleEl = document.getElementById('eliminatedRole');
-  var roleText = '';
-  var roleClass = '';
-  if(role === 'civilian') { roleText = '👤 Người Dân'; roleClass = 'civilian'; }
-  else if(role === 'spy') { roleText = '🕵️ Gián Điệp'; roleClass = 'spy'; }
-  else { roleText = '🎩 Mũ Trắng'; roleClass = 'white-hat'; }
-  roleEl.textContent = roleText;
-  roleEl.className = 'role-reveal ' + roleClass;
-  
-  if(role === 'white_hat') {
-    document.getElementById('resultNextBtn').style.display = 'none';
-    document.getElementById('resultNextBtn2').style.display = 'none';
-  } else {
-    document.getElementById('resultNextBtn').style.display = 'block';
-    document.getElementById('resultNextBtn').textContent = 'Tiếp tục';
-    document.getElementById('resultNextBtn2').style.display = 'none';
-  }
-  showScreen('screen-result');
-  
-  if(role === 'white_hat') {
-    setTimeout(function() {
-      roomRef.update({ status: 'guess', guessPlayer: pid });
-    }, 500);
-  }
-}
-
-function resultNext() {
-  var g = gameState;
-  var alive = getAlivePlayers(g);
-  var a = g.assignments || {};
-  
-  var aliveSpies = 0;
-  var aliveCivilians = 0;
-  var initialCivilians = 0;
-  for(var pid in a) {
-    if(a[pid].role === 'civilian') { initialCivilians++; }
-  }
-  for(var i=0; i<alive.length; i++) {
-    var role = a[alive[i]] ? a[alive[i]].role : null;
-    if(role === 'spy') { aliveSpies++; }
-    if(role === 'civilian') { aliveCivilians++; }
-  }
-  
-  if(aliveSpies > 0 && aliveCivilians <= Math.floor(initialCivilians * 0.4)) {
-    roomRef.update({ status: 'gameover', winner: 'spy' });
-    return;
-  }
-  if(aliveSpies === 0) {
-    roomRef.update({ status: 'gameover', winner: 'civilian' });
-    return;
-  }
-  
-  var round = (g.round || 1) + 1;
-  roomRef.update({
-    status: 'voting',
-    phase: 'vote_round',
-    round: round,
-    votes: {}
-  });
-}
-
-// === GUESS ===
-function handleGuess() {
-  var g = gameState;
-  if(g.guessPlayer === myId) {
-    document.getElementById('guessHint').textContent = g.pair ? g.pair[2] : '—';
-    showScreen('screen-guess');
-  } else {
-    document.getElementById('phaseWaitTitle').textContent = '🎩 Mũ Trắng đang đoán...';
-    document.getElementById('phaseWaitSub').textContent = 'Chờ kết quả...';
-    document.getElementById('phaseActionBtn').style.display = 'none';
-    showScreen('screen-waiting-phase');
-  }
-}
-
-function submitGuess() {
-  var g = gameState;
-  var guess = document.getElementById('guessInput').value.trim().toLowerCase();
-  if(!guess) { alert('Nhập từ đoán!'); return; }
-  var correctWord = (g.pair ? g.pair[0] : '').toLowerCase();
-  var match = (guess.indexOf(correctWord) !== -1) || (correctWord.indexOf(guess) !== -1);
-  if(match) {
-    roomRef.update({ status: 'gameover', winner: 'white_hat' });
-  } else {
-    roomRef.update({ status: 'gameover', winner: 'none' });
-  }
-}
-
-// === GAME OVER ===
-function handleGameOver() {
-  var g = gameState;
-  var winner = g.winner || 'none';
-  var icon = '🏆';
-  var text = '';
-  var sub = '';
-  var cls = '';
-  if(winner === 'civilian') { icon = '👤'; text = 'Dân làng thắng!'; sub = 'Đã vote ra hết gián điệp'; cls = 'civilian-win'; }
-  else if(winner === 'spy') { icon = '🕵️'; text = 'Gián điệp thắng!'; sub = 'Dân làng không đủ số lượng'; cls = 'spy-win'; }
-  else if(winner === 'white_hat') { icon = '🎩'; text = 'Mũ Trắng thắng!'; sub = 'Đã đoán đúng từ của dân làng'; cls = 'white-hat-win'; }
-  else { icon = '💀'; text = 'Mũ trắng đoán sai!'; sub = 'Không ai thắng'; cls = ''; }
-  
-  document.getElementById('winnerIcon').textContent = icon;
-  var wt = document.getElementById('winnerText');
-  wt.textContent = text;
-  wt.className = 'winner-text ' + cls;
-  document.getElementById('winnerSub').textContent = sub;
-  showScreen('screen-gameover');
-}
-
-// === LEAVE / RESET ===
-function resetToLobby() { leaveRoom(); }
-
-function leaveRoom() {
-  if(roomRef) {
-    roomRef.off('value');
-    roomRef.child('players').off('value');
-    if(isHost) {
-      roomRef.remove().catch(function() {});
-    } else if(myId) {
-      roomRef.child('players/' + myId).remove().catch(function() {});
-    }
-  }
-  roomRef = null;
-  myId = null;
-  isHost = false;
-  hostedSetupReady = false;
-  selectedVote = null;
-  roomValueListener = null;
-  roomPlayersListener = null;
-  document.getElementById('nameInputMain').value = '';
-  document.getElementById('roomCodeInput').value = '';
-  document.getElementById('guessInput').value = '';
-  showScreen('screen-lobby');
-}
-
-// Auto detect draw completion
-setInterval(function() {
-  if(!isHost || !roomRef) { return; }
-  var g = gameState;
-  if(!g || g.status !== 'drawing') { return; }
-  var seen = g.cardsSeen || {};
-  var turnOrder = g.turnOrder || [];
-  var allSeen = true;
-  for(var i=0; i<turnOrder.length; i++) {
-    if(!seen[turnOrder[i]]) { allSeen = false; break; }
-  }
-  if(allSeen && (g.currentTurn || 0) >= turnOrder.length) {
-    roomRef.child('phase').set('draw_done');
-  }
-}, 2000);
-
-console.log('🕵️ Ai Là Gián Điệp — Loaded');
+// AUTO CHECK DRAW DONE
+setInterval(function(){
+  if(!chuPhong||!roomRef) return;
+  var g=gs; if(!g||g.status!=='drawing') return;
+  var seen=g.cardsSeen||{},to=g.turnOrder||[];
+  var all=true; for(var i=0;i<to.length;i++){if(!seen[to[i]]){all=false;break}}
+  if(all&&(g.currentTurn||0)>=to.length) roomRef.child('phase').set('draw_done');
+},2000);
 </script>
 </body>
 </html>
