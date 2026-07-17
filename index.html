@@ -694,6 +694,8 @@ function createRoom() {
     console.log('firebase write success');
     isHost = true;
     myRole = 'host';
+    // Immediately set local state so UI renders
+    gameState = data;
     listenRoom();
     document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
     hostedSetupReady = true;
@@ -838,23 +840,27 @@ function adjustTotal(d) {
 }
 
 function adjSpy(d) {
-  const g = gameState;
-  let n = g.spies + d;
-  if(n < 0) n = 0;
-  if(n > g.total - g.whiteHats - 1) n = g.total - g.whiteHats - 1;
-  if(n + g.whiteHats >= g.total) return;
-  g.spies = n;
-  roomRef.child('spies').set(n);
+  roomRef.once('value', function(snap) {
+    var g = snap.val();
+    if(!g) return;
+    var n = (g.spies || 0) + d;
+    if(n < 0) n = 0;
+    if(n > (g.total || 8) - (g.whiteHats || 0) - 1) n = (g.total || 8) - (g.whiteHats || 0) - 1;
+    if(n + (g.whiteHats || 0) >= (g.total || 8)) return;
+    roomRef.update({ spies: n });
+  });
 }
 
 function adjWhiteHat(d) {
-  const g = gameState;
-  let n = g.whiteHats + d;
-  if(n < 0) n = 0;
-  if(n > g.total - g.spies - 1) n = g.total - g.spies - 1;
-  if(n + g.spies >= g.total) return;
-  g.whiteHats = n;
-  roomRef.child('whiteHats').set(n);
+  roomRef.once('value', function(snap) {
+    var g = snap.val();
+    if(!g) return;
+    var n = (g.whiteHats || 0) + d;
+    if(n < 0) n = 0;
+    if(n > (g.total || 8) - (g.spies || 0) - 1) n = (g.total || 8) - (g.spies || 0) - 1;
+    if(n + (g.spies || 0) >= (g.total || 8)) return;
+    roomRef.update({ whiteHats: n });
+  });
 }
 
 function startGame() {
