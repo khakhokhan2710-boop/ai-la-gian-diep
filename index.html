@@ -800,18 +800,19 @@ function updateSetupUI() {
 }
 
 function adjustTotal(d) {
-  const g = gameState;
-  let n = g.total + d;
-  if(n < 4) n = 4;
-  if(n > 20) n = 20;
-  // auto adjust spies & white hats
-  let spies = Math.max(1, Math.floor(n * 0.25));
-  let wh = Math.max(1, Math.floor(n * 0.25));
-  if(spies + wh >= n) { spies = Math.max(1, spies-1); wh = Math.max(0, wh-1); }
-  g.total = n; g.spies = spies; g.whiteHats = wh;
-  roomRef.child('total').set(n);
-  roomRef.child('spies').set(spies);
-  roomRef.child('whiteHats').set(wh);
+  roomRef.once('value', function(snap) {
+    var g = snap.val();
+    if(!g) return;
+    var n = g.total + d;
+    if(n < 4) n = 4;
+    if(n > 20) n = 20;
+    var spies = Math.max(1, Math.floor(n * 0.25));
+    var wh = Math.max(1, Math.floor(n * 0.25));
+    if(spies + wh >= n) { spies = Math.max(1, spies-1); wh = Math.max(0, wh-1); }
+    roomRef.child('total').set(n);
+    roomRef.child('spies').set(spies);
+    roomRef.child('whiteHats').set(wh);
+  });
 }
 
 function adjSpy(d) {
@@ -836,14 +837,14 @@ function adjWhiteHat(d) {
 
 function startGame() {
   if(!isHost) return;
-  const g = gameState;
-  if(g.spies + g.whiteHats >= g.total) { alert('Quá nhiều gián điệp/mũ trắng!'); return; }
-
-  // Wait for all players to join (including host)
-  // Change status to 'naming' -> players enter names
-  roomRef.update({
-    status: 'naming',
-    phase: 'join',
+  roomRef.once('value', function(snap) {
+    var g = snap.val();
+    if(!g) return;
+    if(g.spies + g.whiteHats >= g.total) { alert('Quá nhiều gián điệp/mũ trắng!'); return; }
+    roomRef.update({
+      status: 'naming',
+      phase: 'join',
+    });
   });
 }
 
