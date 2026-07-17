@@ -107,9 +107,10 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
  <div class="flex-1"></div>
  <h3 id="waitTitle">⏳ Đang chờ...</h3>
  <p class="p" id="waitSub">...</p>
- <div id="timerArea" style="font-size:48px;font-weight:900;margin:16px 0;color:#818cf8;display:none">3:00</div>
+ <div id="timerArea" style="font-size:48px;font-weight:900;margin:16px 0;color:#818cf8;display:none">0:05</div>
  <p id="timerLabel" style="color:#555;font-size:13px;display:none">Thời gian nói chuyện</p>
  <button class="btn pri" id="waitBtn" style="display:none" onclick="waitAction()">Tiếp</button>
+ <button class="btn sec" id="skipBtn" style="display:none" onclick="skipVote()">⏩ Bỏ qua → Vote</button>
  <div class="flex-1"></div>
 </div>
 
@@ -397,12 +398,16 @@ function xuLyPhase(){
     document.getElementById('timerArea').style.display='block';
     document.getElementById('timerLabel').style.display='block';
     document.getElementById('waitBtn').style.display='none';
+    document.getElementById('skipBtn').style.display='none';
     if(timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function(){
       var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       var m = Math.floor(remaining/60);
       var s = remaining%60;
       document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
+      if(chuPhong && remaining > 0) {
+        document.getElementById('skipBtn').style.display='block';
+      }
       if(remaining <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -429,7 +434,7 @@ var timerInterval = null;
 function batDauDem(){
   if(timerInterval) clearInterval(timerInterval);
   // Save end time to Firebase so all players sync
-  var endTime = Date.now() + 180000; // 3 minutes from now
+  var endTime = Date.now() + 5000; // 5 seconds for fast test
   roomRef.child('voteTime').set(endTime).then(function(){
     document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
     document.getElementById('waitSub').textContent='Mở vote sau 3 phút';
@@ -440,10 +445,10 @@ function batDauDem(){
       var m = Math.floor(remaining/60);
       var s = remaining%60;
       document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-      if(remaining <= 0) {
+      if(remaining <= 0 || document.getElementById('waitBtn').style.display==='block') {
         clearInterval(timerInterval);
         timerInterval = null;
-        roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+        if(remaining <= 0) roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
       }
     }, 1000);
   });
@@ -454,6 +459,11 @@ function waitAction(){
   if(g.phase==='draw_done') {
     batDauDem();
   }
+}
+function skipVote(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+  roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
 }
 function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<o.length;i++){if(!e[o[i]])r.push(o[i])}return r}
 function xuLyVote(){
@@ -574,3 +584,4 @@ setInterval(function(){
 </script>
 </body>
 </html>
+// Fri Jul 17 15:19:37 +07 2026
