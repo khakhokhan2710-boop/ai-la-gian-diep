@@ -853,14 +853,20 @@ function adjWhiteHat(d) {
 
 function startGame() {
   if(!isHost) { return; }
-  roomRef.once('value').then(function(snap) {
-    var g = snap.val();
-    if(!g) { return; }
-    if((g.spies || 0) + (g.whiteHats || 0) >= (g.total || 8)) {
-      alert('Quá nhiều gián điệp/mũ trắng!');
-      return;
-    }
-    roomRef.update({ status: 'naming', phase: 'join' });
+  var g = gameState;
+  if(!g) { return; }
+  if((g.spies || 0) + (g.whiteHats || 0) >= (g.total || 8)) {
+    alert('Quá nhiều gián điệp/mũ trắng!');
+    return;
+  }
+  var playerCount = 0;
+  for(var k in (g.players || {})) { playerCount++; }
+  if(playerCount < 2) { alert('Cần ít nhất 2 người!'); return; }
+  
+  roomRef.update({ status: 'naming', phase: 'join' }).then(function() {
+    setTimeout(function() { startDrawingPhase(); }, 500);
+  }).catch(function(err) {
+    alert('Lỗi: ' + err.message);
   });
 }
 
