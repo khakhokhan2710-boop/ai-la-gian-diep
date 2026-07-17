@@ -114,8 +114,9 @@ h1{font-size:28px;font-weight:800;margin-bottom:4px}
 <!-- Vote -->
 <div class="s" id="s4">
  <div class="tc mb8"><span class="rl" id="vongText">VÒNG 1</span></div>
- <div class="tc" style="font-size:18px;font-weight:700;margin-bottom:12px">🗳️ Vote</div>
+ <div class="tc" style="font-size:18px;font-weight:700;margin-bottom:12px">🗳️ Chọn người bị loại</div>
  <div id="voteList" style="flex:1;overflow-y:auto"></div>
+ <div class="tc" style="color:#555;font-size:12px;margin:8px 0">Tổng: <span id="voteTong">0</span>/<span id="voteDaVote">0</span> đã vote</div>
  <button class="btn pri" id="voteBtn" onclick="boPhieu()" disabled>🗳️ Bỏ phiếu</button>
 </div>
 
@@ -196,7 +197,7 @@ function taoPhong() {
   myName = ten; myId = randId(); maPhong = maPhongMoi();
   roomRef = db.ref('rooms/' + maPhong);
   var data = {
-    host: myId, hostName: ten, total: 2, spies: 1, whiteHats: 0,
+    host: myId, hostName: ten, total: 8, spies: 2, whiteHats: 2,
     status: 'setup', pair: capNN(), players: {}, eliminated: {},
     turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
   };
@@ -205,12 +206,6 @@ function taoPhong() {
     chuPhong = true; gs = data; langNghe();
     document.getElementById('maPhongDisp').textContent = maPhong;
     capNhatUI(); hien('s1');
-    // Auto start with 2 players for testing
-    setTimeout(function() {
-      if(chuPhong && demKh(gs.players||{}) >= 2) {
-        batDau();
-      }
-    }, 1000);
   }).catch(function(e){alert('Lỗi: '+e.message)});
 }
 
@@ -394,13 +389,21 @@ function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<
 function xuLyVote(){
   var g=gs,r=g.round||1,v=g.votes||{},al=conSong(g);
   document.getElementById('vongText').textContent='VÒNG '+r;
+  document.getElementById('voteTong').textContent=al.length;
+  var daVote=0; for(var k in v){if(al.indexOf(k)!==-1)daVote++}
+  document.getElementById('voteDaVote').textContent=daVote;
+  
   var list=document.getElementById('voteList');list.innerHTML='';binhChon=null;
   for(var i=0;i<al.length;i++){
     var pid=al[i],p=g.players[pid];if(!p)continue;
-    var vf=0;for(var vk in v){if(v[vk]===pid)vf++}
+    var vf=0, aiVote=[];
+    for(var vk in v){if(v[vk]===pid){vf++;aiVote.push(g.players[vk]?g.players[vk].name:'?')}}
     var d=document.createElement('div');
-    d.style.cssText='display:flex;align-items:center;gap:10px;background:#141414;border:1px solid #222;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer';
-    d.innerHTML='<span style="flex:1;font-weight:600">'+esc(p.name)+'</span><span style="color:#666;font-size:13px">'+vf+' phiếu</span><span style="width:20px;height:20px;border-radius:50%;border:2px solid #444;flex-shrink:0"></span>';
+    d.style.cssText='display:flex;align-items:center;gap:8px;background:#141414;border:1px solid #222;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer';
+    d.innerHTML='<span style="flex:1;font-weight:600">'+esc(p.name)+'</span>'+
+      '<span style="font-size:11px;color:#666;text-align:right">'+
+      (vf>0?'<span style="color:#ef4444;font-weight:700">'+vf+' phiếu</span>':'<span style="color:#444">0</span>')+
+      '</span><span style="width:20px;height:20px;border-radius:50%;border:2px solid #444;flex-shrink:0"></span>';
     (function(p2){d.onclick=function(){
       if(v[myId]) return;
       var sl=document.querySelectorAll('#voteList > div');for(var x=0;x<sl.length;x++)sl[x].style.borderColor='#222';
