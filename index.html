@@ -204,7 +204,7 @@ function taoPhong() {
   myName = ten; myId = randId(); maPhong = maPhongMoi();
   roomRef = db.ref('rooms/' + maPhong);
   var data = {
-    host: myId, hostName: ten, total: 2, spies: 1, whiteHats: 0,
+    host: myId, hostName: ten, total: 4, spies: 1, whiteHats: 1,
     status: 'setup', pair: capNN(), players: {}, eliminated: {},
     turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
   };
