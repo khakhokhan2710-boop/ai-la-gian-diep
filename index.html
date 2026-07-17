@@ -447,6 +447,10 @@ html, body {
     </div>
     <div class="small-note">Chia sẻ mã phòng cho bạn bè</div>
     <div style="margin-top:8px;">
+      <div style="font-size:14px;color:#666;margin-bottom:4px;">Đã vào phòng:</div>
+      <div class="waiting-players" id="setupPlayerList" style="justify-content:flex-start;min-height:40px;"></div>
+    </div>
+    <div style="margin-top:8px;">
       <div style="font-size:14px;color:#666;margin-bottom:8px;">Số người chơi</div>
       <div class="player-count">
         <button class="adj" onclick="adjustTotal(-1)">−</button>
@@ -822,6 +826,14 @@ function updateSetupUI() {
   document.getElementById('spyCountDisp').textContent = spies;
   document.getElementById('whiteHatCountDisp').textContent = wh;
   document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
+  
+  // Update player list in setup
+  var players = gameState.players || {};
+  var names = [];
+  for(var k in players) {
+    names.push('<span class="waiting-player-chip">' + esc(players[k].name) + '</span>');
+  }
+  document.getElementById('setupPlayerList').innerHTML = names.join('') || '<span style="color:#444;font-size:13px;">Chưa có ai...</span>';
 }
 
 function adjustTotal(d) {
