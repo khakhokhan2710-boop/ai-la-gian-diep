@@ -370,15 +370,22 @@ function daXong(e){e.stopPropagation();
   var countSeen = 0;
   for(var k in curSeen) { if(curSeen[k]) countSeen++; }
   var isLast = (countSeen + 1 >= to.length);
-  roomRef.update({currentTurn: (gs.currentTurn||0)+1, phase: isLast ? 'draw_done' : undefined}).then(function() {
-    // Re-read and render
-    roomRef.once('value').then(function(s2){
-      gs = s2.val();
-      if(isLast && chuPhong) { xuLyPhase(); }
-      else if(isLast) { xuLyPhase(); }
-      else { xuLyRutBai(); }
-    });
-  });
+  // Always write phase if last
+  var upd = {currentTurn: (gs.currentTurn||0)+1};
+  if(isLast) {
+    upd.phase = 'draw_done';
+    upd.status = 'phase';
+  }
+  roomRef.update(upd);
+  // Show waiting
+  hien('s3');
+  if(isLast) {
+    document.getElementById('waitTitle').textContent='✅ Tất cả đã rút!';
+    document.getElementById('waitSub').textContent='Đang chờ mở vote...';
+  } else {
+    document.getElementById('waitTitle').textContent='✅ Đã xem!';
+    document.getElementById('waitSub').textContent='Chờ người tiếp theo...';
+  }
 }
 
 function xuLyPhase(){
