@@ -193,7 +193,6 @@ function xao(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+
 function demKh(obj){var n=0;for(var k in obj)n++;return n}
 function esc(s){return (s||'').replace(/[&<>]/g,'')}
 
-// CREATE ROOM
 function taoPhong() {
   var ten = document.getElementById('nameInput').value.trim();
   if(!ten){alert('Nhập tên!');return}
@@ -212,7 +211,6 @@ function taoPhong() {
   }).catch(function(e){alert('Lỗi: '+e.message)});
 }
 
-// JOIN ROOM
 function vaoPhong() {
   var ten = document.getElementById('nameInput').value.trim();
   if(!ten){alert('Nhập tên!');return}
@@ -235,7 +233,6 @@ function vaoPhong() {
   });
 }
 
-// LISTENERS
 function langNghe() {
   if(valueLis) roomRef.off('value', valueLis);
   if(playerLis) roomRef.child('players').off('value', playerLis);
@@ -250,7 +247,6 @@ function langNghe() {
   });
 }
 
-// UPDATE
 function capNhatUI() {
   if(!gs) return;
   document.getElementById('numTong').textContent = gs.total||0;
@@ -277,7 +273,6 @@ function capNhatGame() {
   else if(g.status==='gameover') xuLyGameOver();
 }
 
-// SETUP ACTIONS
 function adjTong(d) {
   roomRef.once('value').then(function(snap){
     var g = snap.val(); if(!g) return;
@@ -312,7 +307,6 @@ function batDau() {
   roomRef.update({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
 
-// START DRAW
 function batDauVe() {
   if(!chuPhong) return;
   var g = gs; if(!g) return;
@@ -336,7 +330,6 @@ function batDauVe() {
   roomRef.update({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
 }
 
-// DRAW
 function xuLyRutBai() {
   var g=gs; if(!g.assignments) return;
   var a=g.assignments[myId]; if(!a) return;
@@ -366,26 +359,28 @@ function xuLyRutBai() {
 
 function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
+  // Write to Firebase
   roomRef.child('cardsSeen/'+myId).set(true);
-  roomRef.child('currentTurn').set((gs.currentTurn||0)+1);
-  // Check if all done -> set phase immediately
-  var to=gs.turnOrder||[];
-  var afterSeen=(gs.cardsSeen||{});
-  afterSeen[myId]=true;
-  var allDone2=true;
-  for(var i=0;i<to.length;i++){if(!afterSeen[to[i]]){allDone2=false;break}}
-  if(allDone2) {
-    roomRef.child('phase').set('draw_done');
-  }
-  // Re-read from Firebase after write to update UI
-  roomRef.once('value').then(function(snap){
-    gs = snap.val();
-    xuLyRutBai();
+  // Read current turn from Firebase, increment, and write back
+  roomRef.child('currentTurn').once('value').then(function(snap){
+    var cur = snap.val() || 0;
+    roomRef.child('currentTurn').set(cur + 1);
+    // After advancing, re-read and check if all done
+    roomRef.once('value').then(function(snap2){
+      gs = snap2.val();
+      var to = gs.turnOrder || [];
+      var seen = gs.cardsSeen || {};
+      var allDone = true;
+      for(var i=0;i<to.length;i++){if(!seen[to[i]]){allDone=false;break}}
+      if(allDone) {
+        roomRef.child('phase').set('draw_done');
+      }
+      xuLyRutBai();
+    });
   });
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';document.getElementById('waitSub').textContent='Chờ...'}
 
-// PHASE
 function xuLyPhase(){
   var g=gs;
   if(g.phase!=='draw_done') return;
@@ -511,7 +506,6 @@ function tinhLoai(g){
   roomRef.update(ud);
 }
 
-// RESULT
 function xuLyKetQua(){
   var g=gs,pid=g.lastEliminated,p=(g.players||{})[pid],role=g.lastRole;
   document.getElementById('biLoaiTen').textContent=p?p.name:'—';
@@ -534,7 +528,6 @@ function tiepTheo(){
   var rd=(g.round||1)+1;roomRef.update({status:'voting',phase:'vote_round',round:rd,votes:{}})
 }
 
-// GUESS
 function xuLyDoan(){
   var g=gs;
   if(g.guessPlayer===myId){document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';hien('s6')}
@@ -548,7 +541,6 @@ function guiDoan(){
   roomRef.update({status:'gameover',winner:match?'white_hat':'none'});
 }
 
-// GAME OVER
 function xuLyGameOver(){
   var g=gs,w=g.winner||'none';
   var icon='🏆',text='',sub='',cls='';
@@ -562,7 +554,6 @@ function xuLyGameOver(){
   hien('s7');
 }
 
-// LEAVE
 function roiPhong(){
   if(roomRef){roomRef.off('value');roomRef.child('players').off('value');
     if(chuPhong)roomRef.remove().catch(function(){});
@@ -573,7 +564,6 @@ function roiPhong(){
   hien('s0');
 }
 
-// AUTO CHECK DRAW DONE
 setInterval(function(){
   if(!chuPhong||!roomRef) return;
   var g=gs; if(!g||g.status!=='drawing') return;
@@ -584,4 +574,3 @@ setInterval(function(){
 </script>
 </body>
 </html>
-// Fri Jul 17 15:19:37 +07 2026
