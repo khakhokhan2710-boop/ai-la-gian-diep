@@ -375,41 +375,42 @@ function daXong(e){e.stopPropagation();
 // PHASE
 function xuLyPhase(){
   var g=gs;
-  if(g.phase==='draw_done'){
-    hien('s3');
-    document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
-    document.getElementById('waitSub').textContent='Nói chuyện đi...';
-    document.getElementById('waitBtn').style.display='none';
+  if(g.phase!=='draw_done') return;
+  hien('s3');
+  if(g.voteTime) {
+    // Timer đã chạy - sync từ Firebase
+    var endTime = g.voteTime;
+    document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
+    document.getElementById('waitSub').textContent='Mở vote sau 3 phút';
     document.getElementById('timerArea').style.display='block';
     document.getElementById('timerLabel').style.display='block';
-    // Check if host already started timer
-    if(g.voteTime) {
-      // Timer already started, sync from Firebase
-      var endTime = g.voteTime;
-      if(timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(function(){
-        var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-        var m = Math.floor(remaining/60);
-        var s = remaining%60;
-        document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
-        if(remaining <= 0) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-      }, 1000);
+    document.getElementById('waitBtn').style.display='none';
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(function(){
+      var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      var m = Math.floor(remaining/60);
+      var s = remaining%60;
+      document.getElementById('timerArea').textContent = m + ':' + (s<10?'0':'') + s;
+      if(remaining <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }, 1000);
   } else if(chuPhong) {
-      document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
-      document.getElementById('waitSub').textContent='Bấm để bắt đầu 3 phút';
-      document.getElementById('waitBtn').style.display='block';
-      document.getElementById('waitBtn').textContent='⏱️ Bắt đầu 3 phút';
-      document.getElementById('timerArea').style.display='none';
-      document.getElementById('timerLabel').style.display='none';
-    } else {
-      document.getElementById('waitTitle').textContent='📋 Đã rút xong!';
-      document.getElementById('waitSub').textContent='Chờ chủ phòng bắt đầu...';
-      document.getElementById('timerArea').style.display='none';
-      document.getElementById('timerLabel').style.display='none';
-    }
+    // Host thấy nút bắt đầu
+    document.getElementById('waitTitle').textContent='📋 Tất cả đã rút!';
+    document.getElementById('waitSub').textContent='Bấm nút để bắt đầu 3 phút nói chuyện';
+    document.getElementById('waitBtn').style.display='block';
+    document.getElementById('waitBtn').textContent='⏱️ Bắt đầu 3 phút';
+    document.getElementById('timerArea').style.display='none';
+    document.getElementById('timerLabel').style.display='none';
+  } else {
+    // Player chờ host
+    document.getElementById('waitTitle').textContent='📋 Đã rút xong!';
+    document.getElementById('waitSub').textContent='Chờ chủ phòng bắt đầu...';
+    document.getElementById('waitBtn').style.display='none';
+    document.getElementById('timerArea').style.display='none';
+    document.getElementById('timerLabel').style.display='none';
   }
 }
 var timerInterval = null;
