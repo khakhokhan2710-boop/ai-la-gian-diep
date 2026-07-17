@@ -747,12 +747,23 @@ function joinRoom() {
 
 // === ROOM LISTENER ===
 var roomListener = null;
+var playerListener = null;
 function listenRoom() {
   if(roomListener) roomRef.off('value', roomListener);
+  if(playerListener) roomRef.child('players').off('value', playerListener);
+  
   roomListener = roomRef.on('value', function(snap) {
-    if(!snap.exists()) { /* room deleted */ return; }
+    if(!snap.exists()) { return; }
     gameState = snap.val();
     onRoomUpdate();
+  });
+  
+  // Listen specifically for player changes
+  playerListener = roomRef.child('players').on('value', function(snap) {
+    if(!snap.exists()) { return; }
+    var players = snap.val();
+    if(gameState) { gameState.players = players; }
+    updateSetupUI();
   });
 }
 
@@ -1317,6 +1328,7 @@ function resetToLobby() {
 function leaveRoom() {
   if(roomRef) {
     roomRef.off('value');
+    roomRef.child('players').off('value');
     if(isHost) {
       roomRef.remove().catch(function() {});
     } else if(myId) {
