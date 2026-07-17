@@ -1109,7 +1109,9 @@ function determineElimination(g) {
   if(!eliminated) return;
   
   // Check tie: if multiple have same max votes
-  const ties = Object.entries(tally).filter(([_,c]) => c === maxVotes);
+  const ties = Object.entries(tally).filter(function(e) {
+    return e[1] === maxVotes;
+  });
   if(ties.length > 1) {
     // tie - need revote or just take the first (simplify: re-vote next round)
     roomRef.update({ phase: 'tie', tiePlayers: ties.map(t=>t[0]) });
