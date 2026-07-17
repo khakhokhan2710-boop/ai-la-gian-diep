@@ -377,7 +377,7 @@ function daXong(e){e.stopPropagation();
   afterSeen[myId]=true;
   var allDone2=true;
   for(var i=0;i<to.length;i++){if(!afterSeen[to[i]]){allDone2=false;break}}
-  if(allDone2) {
+  if(allDone2 && chuPhong) {
     roomRef.child('phase').set('draw_done');
   }
   setTimeout(function(){xuLyRutBai();},300);
