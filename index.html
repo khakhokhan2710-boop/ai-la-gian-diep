@@ -782,7 +782,7 @@ function xuLyVote(){
   if(v[myId]){document.getElementById('voteBtn').disabled=true;document.getElementById('voteBtn').textContent='✅ Đã vote'}
   else{document.getElementById('voteBtn').textContent='🗳️ Bỏ phiếu';document.getElementById('voteBtn').disabled=true}
   var dv=true;for(var i=0;i<al.length;i++){if(!v[al[i]]){dv=false;break}}
-  if(dv&&al.length>0)tinhLoai(g);
+  if(dv&&al.length>0&&demKh(v)>0)tinhLoai(g);
   hien('s4');
 }
 function boPhieu(){if(!binhChon)return;roomRef.child('votes/'+myId).set(binhChon)}
@@ -794,8 +794,10 @@ function tinhLoai(g){
   if(!el)return;
   var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
   if(ties.length>1){
-    alert('Hòa! Vote lại.');
-    roomRef.child('votes').set({});
+    document.getElementById('waitTitle').textContent='🤝 Hòa!';
+    document.getElementById('waitSub').textContent='Vote lại...';
+    hien('s3');
+    setTimeout(function(){roomRef.child('votes').set({});},600);
     return;
   }
   var a = g.assignments || {};
