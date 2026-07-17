@@ -646,16 +646,19 @@ function shuffle(arr) {
 
 // === LOBBY ===
 function createRoom() {
+  console.log('createRoom called');
   const name = (document.getElementById('nameInputMain').value || '').trim();
   if(!name) { alert('Nhập tên của bạn!'); return; }
+  console.log('name:', name);
   myName = name;
   myId = randId();
   roomCode = roomCodeGen();
   roomRef = db.ref('rooms/' + roomCode);
 
   const pair = randPair();
+  console.log('pair chosen:', pair);
 
-  roomRef.set({
+  const data = {
     host: myId,
     hostName: name,
     players: { [myId]: { name: name, joined: true } },
@@ -672,13 +675,20 @@ function createRoom() {
     cardsSeen: {},
     votes: {},
     hostVotePass: false,
-  }).then(() => {
+  };
+  console.log('writing to firebase:', roomCode);
+
+  roomRef.set(data).then(() => {
+    console.log('firebase write success');
     isHost = true;
     myRole = 'host';
     listenRoom();
     document.getElementById('roomCodeDisplaySetup').textContent = roomCode;
     updateSetupUI();
     showScreen('screen-setup');
+  }).catch(err => {
+    console.error('firebase error:', err);
+    alert('Lỗi kết nối Firebase: ' + err.message);
   });
 }
 
