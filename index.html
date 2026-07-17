@@ -547,14 +547,25 @@ function tinhLoai(g){
   if(!el)return;
   var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
   if(ties.length>1){
-    // Tie - reset votes for re-vote
-    alert('Hòa! Không ai bị loại. Vote lại.');
+    alert('Hòa! Vote lại.');
     if(chuPhong) roomRef.update({votes:{}});
     return;
   }
   var role=(g.assignments[el]&&g.assignments[el].role)||'unknown';
-  var ud={};ud['eliminated/'+el]=true;ud.status='result';ud.lastEliminated=el;ud.lastRole=role;
-  roomRef.update(ud);
+  // Build eliminated object explicitly (no deep path syntax)
+  var elim = g.eliminated || {};
+  elim[el] = true;
+  roomRef.update({
+    eliminated: elim,
+    status: 'result',
+    lastEliminated: el,
+    lastRole: role
+  }).then(function(){
+    // Force re-read to ensure UI updates
+    roomRef.once('value').then(function(snap){
+      if(snap.exists()) { gs = snap.val(); capNhatGame(); }
+    });
+  }).catch(function(err){alert('Lỗi vote: '+err.message)});
 }
 
 function xuLyKetQua(){
