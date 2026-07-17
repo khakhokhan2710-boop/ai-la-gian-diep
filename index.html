@@ -757,7 +757,8 @@ function onRoomUpdate() {
   switch(g.status) {
     case 'setup':
       if(isHost) {
-        if(!hostedSetupReady) { hostedSetupReady = true; updateSetupUI(); showScreen('screen-setup'); }
+        updateSetupUI();
+        if(!hostedSetupReady) { showScreen('screen-setup'); hostedSetupReady = true; }
       }
       else {
         // show waiting in nameinput or waiting-screen
@@ -825,15 +826,14 @@ function adjustTotal(d) {
   roomRef.once('value', function(snap) {
     var g = snap.val();
     if(!g) return;
-    var n = g.total + d;
+    var n = (g.total || 8) + d;
     if(n < 4) n = 4;
     if(n > 20) n = 20;
     var spies = Math.max(1, Math.floor(n * 0.25));
     var wh = Math.max(1, Math.floor(n * 0.25));
     if(spies + wh >= n) { spies = Math.max(1, spies-1); wh = Math.max(0, wh-1); }
-    roomRef.child('total').set(n);
-    roomRef.child('spies').set(spies);
-    roomRef.child('whiteHats').set(wh);
+    // write all at once and let firebase listener update UI
+    roomRef.update({ total: n, spies: spies, whiteHats: wh });
   });
 }
 
