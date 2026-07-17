@@ -220,6 +220,12 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
 .sc{font-size:12px;color:#555;margin-top:10px}
 .flex-1{flex:1}.mt-a{margin-top:auto}.tc{text-align:center}.mb8{margin-bottom:8px}
 
+/* === CHAT === */
+.chat-msg{display:flex;align-items:flex-start;gap:8px;padding:6px 0;animation:fadeIn 0.2s ease}
+.chat-msg .who{font-size:11px;color:#818cf8;font-weight:700;min-width:40px;text-align:right}
+.chat-msg .txt{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:8px 12px;font-size:14px;color:#ddd;max-width:80%;word-break:break-word}
+.chat-msg.me .txt{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.25);color:#c4b5fd}
+
 /* === SCROLLBAR === */
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -289,20 +295,24 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
 </div>
 
 <!-- Waiting with timer -->
-<div class="s tc" id="s3">
- <div class="flex-1"></div>
- <div id="nameCardArea" style="display:none;margin-bottom:16px">
+<div class="s" id="s3">
+ <div id="nameCardArea" style="display:none;text-align:center;margin-bottom:8px">
   <div style="font-size:12px;color:#666;margin-bottom:4px">🔊 Đang nói:</div>
-  <div id="currentSpeaker" style="font-size:28px;font-weight:900;padding:16px 24px;background:#1a1a1a;border:1px solid #333;border-radius:16px;display:inline-block">—</div>
-  <div style="font-size:12px;color:#555;margin-top:8px">Thứ tự: <span id="speakerOrder">1</span>/<span id="speakerTotal">2</span></div>
+  <div id="currentSpeaker" style="font-size:24px;font-weight:900;padding:12px 20px;background:#1a1a1a;border:1px solid #333;border-radius:14px;display:inline-block">—</div>
+  <div style="font-size:12px;color:#555;margin-top:4px">Thứ tự: <span id="speakerOrder">1</span>/<span id="speakerTotal">2</span></div>
+  <div id="timerArea" style="display:none;font-size:36px;font-weight:900;margin-top:8px;background:linear-gradient(135deg,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">3:00</div>
  </div>
  <h3 id="waitTitle">⏳ Đang chờ...</h3>
- <p class="p" id="waitSub">...</p>
- <div id="timerArea" style="font-size:48px;font-weight:900;margin:16px 0;color:#818cf8;display:none">3:00</div>
- <p id="timerLabel" style="color:#555;font-size:13px;display:none">Thời gian nói chuyện</p>
- <button class="btn pri" id="waitBtn" style="display:none" onclick="waitAction()">Tiếp</button>
- <button class="btn sec" id="skipBtn" style="display:none" onclick="skipVote()">⏩ Bỏ qua → Vote</button>
- <div class="flex-1"></div>
+ <p class="p tc" id="waitSub">...</p>
+ <div id="chatBox" style="flex:1;overflow-y:auto;padding:4px 0;display:none;min-height:0"></div>
+ <div id="chatInputRow" style="display:none;gap:8px;margin-top:8px">
+  <input class="inp" id="chatInput" placeholder="Nhập key word..." maxlength="100" style="margin:0;flex:1">
+  <button class="btn pri" onclick="guiChat()" style="width:auto;padding:14px 20px;margin:0">Gửi</button>
+ </div>
+ <div style="display:flex;gap:8px;margin-top:8px">
+  <button class="btn pri" id="waitBtn" style="display:none;flex:1" onclick="waitAction()">⏱️ Bắt đầu 3 phút</button>
+  <button class="btn sec" id="skipBtn" style="display:none;flex:1" onclick="skipVote()">⏩ Bỏ qua → Vote</button>
+ </div>
 </div>
 
 <!-- Vote -->
@@ -588,7 +598,6 @@ function xuLyPhase(){
     document.getElementById('waitBtn').style.display='block';
     document.getElementById('waitBtn').textContent='⏱️ Bắt đầu 3 phút';
     document.getElementById('timerArea').style.display='none';
-    document.getElementById('timerLabel').style.display='none';
     document.getElementById('nameCardArea').style.display='none';
   } else {
     // Player chờ host
@@ -596,7 +605,6 @@ function xuLyPhase(){
     document.getElementById('waitSub').textContent='Chờ chủ phòng bắt đầu 3 phút...';
     document.getElementById('waitBtn').style.display='none';
     document.getElementById('timerArea').style.display='none';
-    document.getElementById('timerLabel').style.display='none';
     document.getElementById('nameCardArea').style.display='none';
   }
 }
@@ -604,6 +612,7 @@ var timerInterval = null;
 function batDauDem(){
   if(timerInterval) clearInterval(timerInterval);
   var to = gs.turnOrder || [];
+  showChat(); langNgheChat();
   document.getElementById('nameCardArea').style.display='block';
   document.getElementById('speakerTotal').textContent = to.length;
   showNextSpeaker(0);
@@ -613,7 +622,6 @@ function batDauDem(){
     document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
     document.getElementById('waitSub').textContent='3 phút nói chuyện';
     document.getElementById('timerArea').style.display='block';
-    document.getElementById('timerLabel').style.display='block';
     document.getElementById('waitBtn').style.display='none';
     document.getElementById('skipBtn').style.display='block';
     document.getElementById('skipBtn').textContent='⏩ Bỏ qua → Vote';
@@ -637,6 +645,58 @@ function batDauDem(){
     }, 1000);
   });
 }
+// === CHAT ===
+var chatLis = null;
+var currentSpeakerPid = null;
+function langNgheChat(){
+  if(chatLis) roomRef.child('chat').off('child_added', chatLis);
+  chatLis = roomRef.child('chat').on('child_added', function(snap){
+    var msg = snap.val();
+    if(!msg) return;
+    themChat(msg.from, msg.text, msg.from === myId);
+  });
+}
+function themChat(who, text, isMe){
+  var box = document.getElementById('chatBox');
+  var div = document.createElement('div');
+  div.className = 'chat-msg' + (isMe ? ' me' : '');
+  var p = gs.players||{};
+  var name = (p[who] && p[who].name) || who;
+  div.innerHTML = '<span class="who">'+esc(name)+'</span><span class="txt">'+esc(text)+'</span>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+function guiChat(){
+  var text = document.getElementById('chatInput').value.trim();
+  if(!text) return;
+  // Only current speaker can chat
+  if(myId !== currentSpeakerPid && !chuPhong) {
+    alert('Chưa tới lượt bạn nói!'); return;
+  }
+  roomRef.child('chat').push({from: myId, text: text, time: Date.now()});
+  document.getElementById('chatInput').value = '';
+}
+function showSpeaker(id){
+  currentSpeakerPid = id;
+  var p = gs.players||{};
+  var name = (p[id] && p[id].name) || '—';
+  document.getElementById('currentSpeaker').textContent = name;
+  // Enable chat input if it's me, or host can always talk
+  var inp = document.getElementById('chatInput');
+  var btn = document.querySelector('#chatInputRow .btn');
+  if(myId === id) {
+    inp.disabled = false; inp.placeholder = 'Nhập key word của bạn...'; btn.style.opacity = '1';
+  } else {
+    inp.disabled = true; inp.placeholder = 'Chưa tới lượt...'; btn.style.opacity = '0.4';
+  }
+}
+function showChat(){
+  document.getElementById('chatBox').style.display = 'block';
+  document.getElementById('chatBox').innerHTML = '';
+  document.getElementById('chatInputRow').style.display = 'flex';
+  document.getElementById('chatInput').value = '';
+  document.getElementById('chatInput').disabled = true;
+}
 function showNextSpeaker(idx) {
   var to = (gs.turnOrder || []);
   var pl = (gs.players || {});
@@ -645,14 +705,15 @@ function showNextSpeaker(idx) {
     var name = (pl[pid] && pl[pid].name) || '—';
     document.getElementById('currentSpeaker').textContent = name;
     document.getElementById('speakerOrder').textContent = idx + 1;
+    showSpeaker(pid);
   }
 }
 function syncTimer(endTime) {
+  showChat(); langNgheChat();
   document.getElementById('nameCardArea').style.display='block';
   document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
   document.getElementById('waitSub').textContent='3 phút';
   document.getElementById('timerArea').style.display='block';
-  document.getElementById('timerLabel').style.display='block';
   document.getElementById('waitBtn').style.display='none';
   document.getElementById('skipBtn').style.display='block';
   document.getElementById('skipBtn').textContent='⏩ Bỏ qua → Vote (chủ phòng)';
@@ -800,6 +861,7 @@ function xuLyGameOver(){
 
 function roiPhong(){
   if(roomRef){roomRef.off('value');roomRef.child('players').off('value');
+    if(chatLis) roomRef.child('chat').off('child_added', chatLis); chatLis = null;
     if(chuPhong)roomRef.remove().catch(function(){});
     else if(myId)roomRef.child('players/'+myId).remove().catch(function(){})}
   roomRef=null;myId=null;chuPhong=false;chuanBiXong=false;binhChon=null;gs={};
