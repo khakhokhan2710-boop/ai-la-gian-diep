@@ -546,7 +546,12 @@ function tinhLoai(g){
   var mv=0,el=null;for(var p in tl){if(tl[p]>mv){mv=tl[p];el=p}}
   if(!el)return;
   var ties=[];for(var p in tl){if(tl[p]===mv)ties.push(p)}
-  if(ties.length>1)return;
+  if(ties.length>1){
+    // Tie - reset votes for re-vote
+    alert('Hòa! Không ai bị loại. Vote lại.');
+    if(chuPhong) roomRef.update({votes:{}});
+    return;
+  }
   var role=(g.assignments[el]&&g.assignments[el].role)||'unknown';
   var ud={};ud['eliminated/'+el]=true;ud.status='result';ud.lastEliminated=el;ud.lastRole=role;
   roomRef.update(ud);
