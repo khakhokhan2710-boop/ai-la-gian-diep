@@ -575,7 +575,7 @@ html, body {
 
 <script>
 // === FIREBASE CONFIG ===
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyAFpnzjUdHCL_j7CWsDeJvGVXcr2wOryow",
   authDomain: "ai-la-gian-diep.firebaseapp.com",
   databaseURL: "https://ai-la-gian-diep-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -585,22 +585,23 @@ const firebaseConfig = {
   appId: "1:452354702659:web:b89fa58aa465ece7d8c3f6"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+var db = firebase.database();
 
 // === CONSTANTS ===
-const TOTAL_PAIRS = 550;
-let wordPairs = [];
+var TOTAL_PAIRS = 550;
+var wordPairs = [];
 
 // fetch word pairs
-async function loadWords() {
-  try {
-    const resp = await fetch('word_pairs.json');
-    wordPairs = await resp.json();
+function loadWords() {
+  fetch('word_pairs.json').then(function(resp) {
+    return resp.json();
+  }).then(function(data) {
+    wordPairs = data;
     console.log('Loaded', wordPairs.length, 'word pairs');
-  } catch(e) {
+  }).catch(function(e) {
     console.warn('Could not load word pairs, using fallback', e);
     wordPairs = [["con chó","con mèo","có bốn chân, hay nuôi trong nhà"]];
-  }
+  });
 }
 loadWords();
 
@@ -1047,11 +1048,10 @@ function handleVoting() {
     const div = document.createElement('div');
     div.className = 'vote-player';
     div.dataset.pid = pid;
-    div.innerHTML = `
-      <span class="name">${esc(p.name)}</span>
-      <span class="votes-count">${votesFor} phiếu</span>
-      <span class="checkbox"></span>
-    `;
+    div.innerHTML =
+      '<span class="name">' + esc(p.name) + '</span>' +
+      '<span class="votes-count">' + votesFor + ' phiếu</span>' +
+      '<span class="checkbox"></span>';
     div.onclick = () => {
       if(g.votes && g.votes[myId]) return; // already voted
       document.querySelectorAll('.vote-player').forEach(el => el.classList.remove('selected'));
