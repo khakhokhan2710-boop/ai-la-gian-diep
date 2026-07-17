@@ -69,10 +69,9 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
   border:1px solid rgba(255,255,255,0.08);font-size:16px;text-align:center;
   outline:0;margin-bottom:10px;font-family:inherit;
   transition:all 0.3s ease;
-  backdrop-filter:blur(10px);
 }
 .inp:focus{
-  border-color:#818cf8;box-shadow:0 0 30px rgba(99,102,241,0.2);
+  border-color:#818cf8;box-shadow:0 0 20px rgba(99,102,241,0.15);
   background:rgba(99,102,241,0.05);
 }
 
@@ -96,7 +95,7 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
 .btn.pri:active{box-shadow:0 4px 15px rgba(99,102,241,0.5);transform:scale(0.97)}
 .btn.sec{
   background:rgba(255,255,255,0.03);color:#aaa;
-  border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.08);
 }
 .btn.sec:active{background:rgba(255,255,255,0.06);color:#f5f5f5;transform:scale(0.97)}
 
@@ -108,13 +107,12 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
   width:48px;height:48px;border-radius:50%;
   background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);
   color:#f5f5f5;font-size:24px;cursor:pointer;
-  transition:all 0.2s ease;backdrop-filter:blur(10px);
+  transition:all 0.2s ease;
 }
 .adj:active{background:rgba(99,102,241,0.2);border-color:#818cf8;transform:scale(0.9)}
 .slot{
   background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);
   border-radius:16px;padding:14px;text-align:center;flex:1;
-  backdrop-filter:blur(10px);
 }
 .slot .lb{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.05em}
 .slot .ct{font-size:20px;font-weight:800;margin:6px 0}
@@ -826,7 +824,7 @@ setInterval(function(){
   var colors=['#6366f1','#818cf8','#a78bfa','#c084fc','#8b5cf6','#4f46e5'];
   function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
   resize();window.addEventListener('resize',resize);
-  for(var i=0;i<30;i++){
+  for(var i=0;i<12;i++){
     particles.push({
       x:Math.random()*c.width,
       y:Math.random()*c.height,
@@ -848,7 +846,7 @@ setInterval(function(){
       ctx.fillStyle=p.c;ctx.globalAlpha=p.o;ctx.fill();
     }
     ctx.globalAlpha=1;
-    requestAnimationFrame(draw);
+    setTimeout(draw,67);
   }
   draw();
 })();
