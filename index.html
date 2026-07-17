@@ -481,6 +481,7 @@ html, body {
     </div>
     <div style="margin-top:auto;"></div>
     <button class="start-btn" onclick="startGame()">🚀 Bắt đầu game!</button>
+    <button onclick="leaveRoom()" style="width:100%;padding:12px;background:transparent;border:1px solid #333;border-radius:14px;color:#666;font-family:inherit;font-size:14px;cursor:pointer;margin-top:-12px;">🚪 Rời phòng</button>
   </div>
 
   <!-- SCREEN: NAME INPUT (players join names) -->
@@ -498,6 +499,7 @@ html, body {
     <h3>⏳ Chờ chủ phòng bắt đầu...</h3>
     <p class="sub" id="waitingPlayersText">0 người đã vào phòng</p>
     <div class="waiting-players" id="waitingPlayersList"></div>
+    <button onclick="leaveRoom()" style="margin-top:auto;width:100%;max-width:280px;padding:14px;background:transparent;border:1px solid #333;border-radius:14px;color:#666;font-family:inherit;font-size:14px;cursor:pointer;">🚪 Rời phòng</button>
   </div>
 
   <!-- SCREEN: CARD DRAW -->
@@ -612,14 +614,21 @@ function randPair() {
 // === STATE ===
 var myId = null;
 var myName = '';
-var myRole = null; // 'host' | 'player'
+var myRole = null;
 var roomRef = null;
 var roomCode = '';
-var gameState = {}; // cached from firebase
+var gameState = {};
 var selectedVote = null;
 var isHost = false;
 var hostedSetupReady = false;
-var cardsFlipped = {}; // track who flipped
+var cardsFlipped = {};
+
+// Generate a persistent device ID
+var deviceId = localStorage.getItem('deviceId');
+if(!deviceId) {
+  deviceId = 'dev_' + Math.random().toString(36).substring(2,10) + Date.now().toString(36);
+  localStorage.setItem('deviceId', deviceId);
+}
 
 // === HELPERS ===
 function randId() {
@@ -664,7 +673,7 @@ function createRoom() {
   data.host = myId;
   data.hostName = name;
   data.players = new Object();
-  data.players[myId] = { name: name, joined: true };
+  data.players[myId] = { name: name, joined: true, deviceId: deviceId };
   data.status = 'setup';
   data.total = 8;
   data.spies = 2;
@@ -697,23 +706,32 @@ function createRoom() {
 }
 
 function joinRoom() {
-  const name = (document.getElementById('nameInputMain').value || '').trim();
+  var name = (document.getElementById('nameInputMain').value || '').trim();
   if(!name) { alert('Nhập tên của bạn!'); return; }
   myName = name;
-  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  var code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
   if(!code || code.length < 4) { alert('Nhập mã phòng!'); return; }
   roomCode = code;
   roomRef = db.ref('rooms/' + code);
 
-  roomRef.once('value').then(snap => {
+  roomRef.once('value').then(function(snap) {
     if(!snap.exists()) { alert('Không tìm thấy phòng!'); return; }
-    const data = snap.val();
+    var data = snap.val();
     if(data.status !== 'setup') { alert('Game đã bắt đầu!'); return; }
-    if(Object.keys(data.players||{}).length >= data.total) { alert('Phòng đầy!'); return; }
+    
+    // Check deviceId already in room
+    var players = data.players || {};
+    var found = false;
+    for(var k in players) {
+      if(players[k].deviceId === deviceId) { found = true; break; }
+    }
+    if(found) { alert('Bạn đã vào phòng này từ thiết bị khác! Mỗi người chỉ được 1 nick.'); return; }
+    
+    if(Object.keys(players).length >= data.total) { alert('Phòng đầy!'); return; }
 
     myId = randId();
     myRole = 'player';
-    roomRef.child('players/' + myId).set({ name: name, joined: true });
+    roomRef.child('players/' + myId).set({ name: name, joined: true, deviceId: deviceId });
     listenRoom();
     document.getElementById('roomCodeDispName').textContent = code;
     document.getElementById('nameJoinInput').value = name;
@@ -1271,10 +1289,16 @@ function handleGameOver() {
 
 // === RESET ===
 function resetToLobby() {
+  leaveRoom();
+}
+
+function leaveRoom() {
   if(roomRef) {
     roomRef.off('value');
     if(isHost) {
-      roomRef.remove().catch(() => {});
+      roomRef.remove().catch(function() {});
+    } else if(myId) {
+      roomRef.child('players/' + myId).remove().catch(function() {});
     }
   }
   roomRef = null;
