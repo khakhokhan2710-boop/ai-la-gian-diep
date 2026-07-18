@@ -869,6 +869,12 @@ function tinhLoai(g){
     status: 'result',
     lastEliminated: el,
     lastRole: role
+  }).then(function(){
+    gs.lastEliminated = el;
+    gs.lastRole = role;
+    gs.status = 'result';
+    gs.eliminated = elim;
+    xuLyKetQua();
   }).catch(function(err){alert('Lỗi: '+err.message)});
 }
 
