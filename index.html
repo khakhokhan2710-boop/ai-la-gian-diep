@@ -841,7 +841,7 @@ function xuLyVote(){
   if(v[myId]){document.getElementById('voteBtn').disabled=true;document.getElementById('voteBtn').textContent='✅ Đã vote'}
   else{document.getElementById('voteBtn').textContent='🗳️ Bỏ phiếu';document.getElementById('voteBtn').disabled=true}
   var dv=true;for(var i=0;i<al.length;i++){if(!v[al[i]]){dv=false;break}}
-  if(dv&&al.length>0&&demKh(v)>0)tinhLoai(g);
+  if(dv&&al.length>0){tinhLoai(g);return;}
   hien('s4');
 }
 function boPhieu(){if(!binhChon)return;roomRef.child('votes/'+myId).set(binhChon)}
