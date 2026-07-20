@@ -685,7 +685,7 @@ function batDauDem(){
         clearInterval(timerInterval);
         timerInterval = null;
         document.getElementById('nameCardArea').style.display='none';
-        roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+        roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
       }
     }, 1000);
   });
@@ -794,7 +794,9 @@ function syncTimer(endTime) {
       clearInterval(timerInterval);
       timerInterval = null;
       document.getElementById('nameCardArea').style.display='none';
-      roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+      document.getElementById('chatBox').style.display='none';
+      document.getElementById('chatInputRow').style.display='none';
+      roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
     }
   }, 1000);
 }
@@ -809,7 +811,7 @@ function skipVote(){
   if(!chuPhong) return;
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = null;
-  roomRef.update({status:'voting',phase:'vote_round',round:1,votes:{}});
+  roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
 }
 function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<o.length;i++){if(!e[o[i]])r.push(o[i])}return r}
 function xuLyVote(){
@@ -897,7 +899,9 @@ function tiepTheo(){
   for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
   if(sp>0&&cv<=Math.floor(ic*0.4)){roomRef.update({status:'gameover',winner:'spy'});return}
   if(sp===0){roomRef.update({status:'gameover',winner:'civilian'});return}
-  var rd=(g.round||1)+1;roomRef.update({status:'voting',phase:'vote_round',round:rd,votes:{}})
+  // Back to timer + chat for next round (shorter: 60s)
+  var rd=(g.round||1)+1;
+  roomRef.update({phase:'draw_done',voteTime:Date.now()+60000,round:rd});
 }
 
 function xuLyDoan(){
