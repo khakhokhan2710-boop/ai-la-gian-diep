@@ -287,13 +287,24 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
  <div class="flex-1"></div>
  <h1 class="tc">🕵️ Gián Điệp</h1>
  <p class="p tc">Game đoán vai trực tuyến</p>
+ <div class="flex-1"></div>
+ <button class="btn pri" onclick="hien('s8')" style="font-size:18px;padding:20px">🌐 Chế Độ Online</button>
+ <div class="flex-1"></div>
+</div>
+
+<!-- Online Lobby -->
+<div class="s" id="s8">
+ <div class="flex-1"></div>
+ <h2 class="tc">🌐 Chế Độ Online</h2>
+ <p class="p tc">Nhập tên để bắt đầu</p>
  <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="20">
- <button class="btn pri" onclick="taoPhong()">🏠 Tạo Phòng</button>
+ <button class="btn pri" onclick="taoPhong()">🏠 Tạo Phòng Mới</button>
  <div class="row"><span style="color:#444;font-size:13px">— hoặc —</span></div>
  <div class="row" style="gap:8px">
   <input class="inp" id="maPhongInput" placeholder="Mã phòng..." style="margin:0;flex:1;text-transform:uppercase" maxlength="6">
   <button class="btn pri" onclick="vaoPhong()" style="width:auto;padding:14px 20px;margin:0">Vào</button>
  </div>
+ <button class="btn sec" onclick="hien('s0')" style="margin-top:20px">← Quay lại</button>
  <div class="flex-1"></div>
 </div>
 
