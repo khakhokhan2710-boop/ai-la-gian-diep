@@ -289,6 +289,8 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
  <p class="p tc">Game đoán vai trực tuyến</p>
  <div class="flex-1"></div>
  <button class="btn pri" onclick="hien('s8')" style="font-size:18px;padding:20px">🌐 Chế Độ Online</button>
+ <div style="height:10px"></div>
+ <button class="btn sec" onclick="taoPhongOffline()" style="font-size:16px;padding:16px">📴 Chơi Offline</button>
  <div class="flex-1"></div>
 </div>
 
@@ -436,6 +438,55 @@ var chuPhong = false;
 var chuanBiXong = false;
 var valueLis = null;
 var playerLis = null;
+var isOffline = false;
+var offlineTimerInterval = null;
+
+function doc() {
+  if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
+  return roomRef.once('value');
+}
+
+function ghi(path, data) {
+  if(isOffline) {
+    for(var k in data) { gs[k] = data[k]; }
+    capNhatGame();
+    return Promise.resolve();
+  } else if(roomRef) {
+    return roomRef.update(data).catch(function(err){alert('Lỗi: '+err.message)});
+  }
+  return Promise.resolve();
+}
+function ghiChild(path, val) {
+  if(isOffline) {
+    var parts = path.split('/');
+    var cur = gs;
+    for(var i=0;i<parts.length-1;i++) {
+      if(!cur[parts[i]]) cur[parts[i]] = {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length-1]] = val;
+    capNhatGame();
+    return Promise.resolve();
+  } else if(roomRef) {
+    return roomRef.child(path).set(val).catch(function(err){alert('Lỗi: '+err.message)});
+  }
+  return Promise.resolve();
+}
+
+function taoPhongOffline() {
+  isOffline = true;
+  myName = 'Chủ phòng';
+  myId = 'host';
+  gs = {
+    host: myId, hostName: myName, total: 2, spies: 1, whiteHats: 0,
+    status: 'setup', pair: capNN(), players: {}, eliminated: {},
+    turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
+  };
+  gs.players[myId] = { name: myName, joined: true };
+  chuPhong = true; chuanBiXong = false;
+  document.getElementById('maPhongDisp').textContent = 'OFFLINE';
+  capNhatUI(); hien('s1');
+}
 
 var deviceId = localStorage.getItem('devId');
 if(!deviceId) { deviceId = 'd' + Math.random().toString(36).substr(2,8) + Date.now().toString(36); localStorage.setItem('devId', deviceId); }
@@ -474,7 +525,7 @@ function vaoPhong() {
   var code = document.getElementById('maPhongInput').value.trim().toUpperCase();
   if(!code||code.length<4){alert('Nhập mã phòng!');return}
   maPhong = code; roomRef = db.ref('rooms/' + code);
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     if(!snap.exists()){alert('Không có phòng!');return}
     var g = snap.val();
     if(g.status!=='setup'){alert('Game đã bắt đầu!');return}
@@ -482,7 +533,7 @@ function vaoPhong() {
     for(var k in pl){if(pl[k].deviceId===deviceId){alert('Bạn đã trong phòng!');return}}
     if(demKh(pl) >= (g.total||8)){alert('Phòng đầy!');return}
     myId = randId();
-    roomRef.child('players/'+myId).set({name:ten,deviceId:deviceId});
+    ghiChild('players/'+myId, {name:ten,deviceId:deviceId});
     langNghe(); hien('s3');
     document.getElementById('waitTitle').textContent = '⏳ Đã vào phòng!';
     document.getElementById('waitSub').textContent = 'Chờ chủ phòng bắt đầu 3 phút...';
@@ -490,6 +541,7 @@ function vaoPhong() {
 }
 
 function langNghe() {
+  if(isOffline || !roomRef) return;
   if(valueLis) roomRef.off('value', valueLis);
   if(playerLis) roomRef.child('players').off('value', playerLis);
   valueLis = roomRef.on('value', function(snap){
@@ -530,28 +582,28 @@ function capNhatGame() {
 }
 
 function adjTong(d) {
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     var g = snap.val(); if(!g) return;
     var n = (g.total||8)+d; if(n<4)n=4;if(n>20)n=20;
     var s=Math.max(1,Math.floor(n*0.25)), w=Math.max(1,Math.floor(n*0.25));
     if(s+w>=n){s=Math.max(1,s-1);w=Math.max(0,w-1)}
-    roomRef.update({total:n,spies:s,whiteHats:w});
+    ghi({total:n,spies:s,whiteHats:w});
   });
 }
 function adjSpy(d) {
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     var g=snap.val();if(!g)return;
     var n=(g.spies||0)+d;if(n<0)n=0;
     var m=(g.total||8)-(g.whiteHats||0)-1;if(n>m)n=m;
-    roomRef.update({spies:n});
+    ghi({spies:n});
   });
 }
 function adjHat(d) {
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     var g=snap.val();if(!g)return;
     var n=(g.whiteHats||0)+d;if(n<0)n=0;
     var m=(g.total||8)-(g.spies||0)-1;if(n>m)n=m;
-    roomRef.update({whiteHats:n});
+    ghi({whiteHats:n});
   });
 }
 
@@ -560,12 +612,12 @@ function batDau() {
   var g = gs;
   if((g.spies||0)+(g.whiteHats||0)>=(g.total||8)){alert('Quá nhiều gián điệp/mũ trắng!');return}
   if(demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
-  roomRef.update({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
+  ghi({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
 
 function batDauVe() {
   if(!chuPhong) return;
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     var g = snap.val();
     if(!g) return;
     var ps = []; for(var k in (g.players||{})) ps.push(k);
@@ -585,7 +637,7 @@ function batDauVe() {
       else h=pair[2]||'gợi ý';
       as[pid] = {role:role,word:w,hint:h};
     }
-    roomRef.update({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
+    ghi({status:'drawing',assignments:as,turnOrder:to,currentTurn:0,cardsSeen:{},eliminated:{},pair:pair});
   });
 }
 
@@ -619,13 +671,13 @@ function xuLyRutBai() {
 function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
   var cur = gs.currentTurn || 0;
-  roomRef.child('cardsSeen/'+myId).set(true);
-  roomRef.child('currentTurn').set(cur + 1);
+  ghiChild('cardsSeen/'+myId, true);
+  ghiChild('currentTurn', cur + 1);
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';
   document.getElementById('waitSub').textContent='Chờ người tiếp theo...';
   // Read fresh data from Firebase (not cache) to check all done
-  roomRef.once('value').then(function(snap){
+  doc().then(function(snap){
     var g2 = snap.val();
     if(!g2) return;
     gs = g2;
@@ -634,7 +686,7 @@ function daXong(e){e.stopPropagation();
     var doneCount = 0;
     for(var k in cards) { if(cards[k]) doneCount++; }
     if(doneCount >= turnOrder.length) {
-      roomRef.update({phase:'draw_done',status:'phase'});
+      ghi({phase:'draw_done',status:'phase'});
     }
   });
 }
@@ -673,7 +725,7 @@ function batDauDem(){
   showNextSpeaker(0);
   
   var endTime = Date.now() + 180000;
-  roomRef.update({voteTime:endTime,currentSpeakerIdx:0}).then(function(){
+  ghi({voteTime:endTime,currentSpeakerIdx:0}).then(function(){
     document.getElementById('waitTitle').textContent='💬 Đang nói chuyện...';
     document.getElementById('waitSub').textContent='3 phút nói chuyện';
     document.getElementById('timerArea').style.display='block';
@@ -696,7 +748,7 @@ function batDauDem(){
         clearInterval(timerInterval);
         timerInterval = null;
         document.getElementById('nameCardArea').style.display='none';
-        roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
+        ghi({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
       }
     }, 1000);
   });
@@ -705,6 +757,7 @@ function batDauDem(){
 var chatLis = null;
 var currentSpeakerPid = null;
 function langNgheChat(){
+  if(isOffline || !roomRef) return;
   if(chatLis) roomRef.child('chat').off('child_added', chatLis);
   chatLis = roomRef.child('chat').on('child_added', function(snap){
     var msg = snap.val();
@@ -735,14 +788,15 @@ function guiChat(){
   if(myId !== currentSpeakerPid) {
     alert('Chưa tới lượt bạn nói! Chat để tôi chuyển lượt.'); return;
   }
-  roomRef.child('chat').push({from: myId, text: text, time: Date.now()});
+  if(isOffline) { themChat(myId, text, true); document.getElementById('chatInput').value=''; }
+  else { roomRef.child('chat').push({from: myId, text: text, time: Date.now()}); }
   document.getElementById('chatInput').value = '';
   // Advance to next speaker
   var to = gs.turnOrder || [];
   var curIdx = gs.currentSpeakerIdx || 0;
   var nextIdx = curIdx + 1;
   if(nextIdx >= to.length) nextIdx = 0;
-  roomRef.child('currentSpeakerIdx').set(nextIdx);
+  ghiChild('currentSpeakerIdx', nextIdx);
 }
 function showSpeaker(id){
   currentSpeakerPid = id;
@@ -807,7 +861,7 @@ function syncTimer(endTime) {
       document.getElementById('nameCardArea').style.display='none';
       document.getElementById('chatBox').style.display='none';
       document.getElementById('chatInputRow').style.display='none';
-      roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
+      ghi({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
     }
   }, 1000);
 }
@@ -822,7 +876,7 @@ function skipVote(){
   if(!chuPhong) return;
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = null;
-  roomRef.update({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
+  ghi({status:'voting',phase:'vote_round',round:(gs.round||1),votes:{}});
 }
 function conSong(g){var r=[],e=g.eliminated||{},o=g.turnOrder||[];for(var i=0;i<o.length;i++){if(!e[o[i]])r.push(o[i])}return r}
 function xuLyVote(){
@@ -857,7 +911,7 @@ function xuLyVote(){
   if(dv&&al.length>0&&demKh(v)>0){tinhLoai(g);return;}
   hien('s4');
 }
-function boPhieu(){if(!binhChon)return;roomRef.child('votes/'+myId).set(binhChon)}
+function boPhieu(){if(!binhChon)return;ghiChild('votes/'+myId, binhChon)}
 function tinhLoai(g){
   var al=conSong(g),v=g.votes||{},tl={};
   for(var i=0;i<al.length;i++)tl[al[i]]=0;
@@ -869,7 +923,7 @@ function tinhLoai(g){
     document.getElementById('waitTitle').textContent='🤝 Hòa!';
     document.getElementById('waitSub').textContent='Vote lại...';
     hien('s3');
-    setTimeout(function(){roomRef.child('votes').set({});},600);
+    setTimeout(function(){ghiChild('votes', {});},600);
     return;
   }
   var a = g.assignments || {};
@@ -877,7 +931,7 @@ function tinhLoai(g){
   var elim = g.eliminated || {};
   elim[el] = true;
   // Just write — listeners on all devices will pick up the change
-  roomRef.update({
+  ghi({
     eliminated: elim,
     status: 'result',
     lastEliminated: el,
@@ -899,7 +953,7 @@ function xuLyKetQua(){
   else if(role==='spy'){el.textContent='🕵️ Gián Điệp';el.style.background='rgba(239,68,68,0.1)';el.style.color='#ef4444';el.style.border='1px solid rgba(239,68,68,0.2)'}
   else{el.textContent='🎩 Mũ Trắng';el.style.background='rgba(129,140,248,0.1)';el.style.color='#818cf8';el.style.border='1px solid rgba(129,140,248,0.2)'}
   if(role==='white_hat'){document.getElementById('tiepBtn').style.display='none';document.getElementById('tiepBtn2').style.display='none';
-    setTimeout(function(){roomRef.update({status:'guess',guessPlayer:pid})},800)}
+    setTimeout(function(){ghi({status:'guess',guessPlayer:pid})},800)}
   else{document.getElementById('tiepBtn').style.display='block';document.getElementById('tiepBtn').textContent='Tiếp tục'}
   hien('s5');
 }
@@ -908,11 +962,11 @@ function tiepTheo(){
   var sp=0,cv=0,ic=0;
   for(var p in a){if(a[p].role==='civilian')ic++}
   for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
-  if(sp>0&&cv<=Math.floor(ic*0.4)){roomRef.update({status:'gameover',winner:'spy'});return}
-  if(sp===0){roomRef.update({status:'gameover',winner:'civilian'});return}
+  if(sp>0&&cv<=Math.floor(ic*0.4)){ghi({status:'gameover',winner:'spy'});return}
+  if(sp===0){ghi({status:'gameover',winner:'civilian'});return}
   // Back to timer + chat for next round (3 min)
   var rd=(g.round||1)+1;
-  roomRef.update({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+  ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
 }
 
 function xuLyDoan(){
@@ -925,7 +979,7 @@ function guiDoan(){
   if(!gus){alert('Nhập từ!');return}
   var cw=(g.pair?g.pair[0]:'').toLowerCase();
   var match=(gus.indexOf(cw)!==-1)||(cw.indexOf(gus)!==-1);
-  roomRef.update({status:'gameover',winner:match?'white_hat':'none'});
+  ghi({status:'gameover',winner:match?'white_hat':'none'});
 }
 
 function xuLyGameOver(){
@@ -942,6 +996,7 @@ function xuLyGameOver(){
 }
 
 function roiPhong(){
+  isOffline = false;
   if(roomRef){roomRef.off('value');roomRef.child('players').off('value');
     if(chatLis) roomRef.child('chat').off('child_added', chatLis); chatLis = null;
     if(chuPhong)roomRef.remove().catch(function(){});
@@ -953,11 +1008,12 @@ function roiPhong(){
 }
 
 setInterval(function(){
+  if(isOffline) return;
   if(!chuPhong||!roomRef) return;
   var g=gs; if(!g||g.status!=='drawing') return;
   var seen=g.cardsSeen||{},to=g.turnOrder||[];
   var all=true; for(var i=0;i<to.length;i++){if(!seen[to[i]]){all=false;break}}
-  if(all&&(g.currentTurn||0)>=to.length) roomRef.child('phase').set('draw_done');
+  if(all&&(g.currentTurn||0)>=to.length) ghiChild('phase','draw_done');
 },2000);
 
 // === PARTICLE ANIMATION ===
