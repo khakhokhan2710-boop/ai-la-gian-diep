@@ -642,6 +642,11 @@ function batDauVe() {
     while(roles.length<ps.length) roles.push('civilian');
     xao(roles);
     var to = ps.slice(); xao(to);
+    // Offline: host is always first (pass-and-play)
+    if(isOffline && to[0] !== myId) {
+      var hi = to.indexOf(myId);
+      if(hi>0){to.splice(hi,1);to.unshift(myId);}
+    }
     var as = {};
     for(var i=0;i<ps.length;i++){
       var pid = to[i], role = roles[i]||'civilian', w='', h='';
