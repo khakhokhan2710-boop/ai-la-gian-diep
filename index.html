@@ -899,9 +899,9 @@ function tiepTheo(){
   for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
   if(sp>0&&cv<=Math.floor(ic*0.4)){roomRef.update({status:'gameover',winner:'spy'});return}
   if(sp===0){roomRef.update({status:'gameover',winner:'civilian'});return}
-  // Back to timer + chat for next round (shorter: 60s)
+  // Back to timer + chat for next round (3 min)
   var rd=(g.round||1)+1;
-  roomRef.update({phase:'draw_done',voteTime:Date.now()+60000,round:rd});
+  roomRef.update({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
 }
 
 function xuLyDoan(){
