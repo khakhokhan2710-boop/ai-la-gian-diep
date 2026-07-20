@@ -623,6 +623,7 @@ function batDau() {
     }
     g.players = players;
     gs.players = players;
+    batDauVe(); return; // Offline: start immediately
   }
   ghi({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
