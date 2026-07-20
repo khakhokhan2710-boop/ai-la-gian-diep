@@ -611,7 +611,19 @@ function batDau() {
   if(!chuPhong||!gs) return;
   var g = gs;
   if((g.spies||0)+(g.whiteHats||0)>=(g.total||8)){alert('Quá nhiều gián điệp/mũ trắng!');return}
-  if(demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
+  if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
+  // Offline: auto-generate players based on total
+  if(isOffline) {
+    var total = g.total || 2;
+    var players = {};
+    var hostId = myId || 'host';
+    players[hostId] = { name: 'Người 1', joined: true };
+    for(var i=2; i<=total; i++) {
+      players['p' + i] = { name: 'Người ' + i, joined: true };
+    }
+    g.players = players;
+    gs.players = players;
+  }
   ghi({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
 
