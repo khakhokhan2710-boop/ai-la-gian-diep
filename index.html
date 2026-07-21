@@ -700,6 +700,18 @@ function xuLyRutBai() {
     ghi({phase:'draw_done',status:'phase'});
     return;
   }
+  // Offline pass-and-play: check name before showing card
+  if(isOffline) {
+    var pData = g.players && g.players[pid];
+    var needName = !pData || !pData.name || pData.name.indexOf('Người ')===0;
+    if(needName) {
+      var dfl = pData && pData.name ? pData.name : 'Người '+(idx+1);
+      var ten = prompt('Người '+(idx+1)+'/'+to.length+' — Nhập tên của bạn:', dfl);
+      if(!ten || !ten.trim()) { alert('Phải nhập tên!'); return; }
+      if(!g.players[pid]) g.players[pid] = {};
+      g.players[pid].name = ten.trim();
+    }
+  }
   // Offline pass-and-play: show card for whoever's turn it is
   var viewId = isOffline ? pid : myId;
   var a=g.assignments[viewId]; if(!a) return;
