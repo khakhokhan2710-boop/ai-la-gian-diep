@@ -1046,7 +1046,7 @@ function tiepTheo(){
 
 function xuLyDoan(){
   var g=gs;
-  if(g.guessPlayer===myId){document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';hien('s6')}
+  if(isOffline || g.guessPlayer===myId){document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';hien('s6')}
   else{hien('s3');document.getElementById('waitTitle').textContent='🎩 Mũ Trắng đang đoán...';document.getElementById('waitBtn').style.display='none'}
 }
 function guiDoan(){
