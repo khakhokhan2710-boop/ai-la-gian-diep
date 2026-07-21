@@ -651,7 +651,7 @@ function adjHat(d) {
 function batDau() {
   if(!chuPhong||!gs) return;
   var g = gs;
-  if((g.spies||0)+(g.whiteHats||0)>=(g.total||8)){alert('Quá nhiều gián điệp/mũ trắng!');return}
+  if((g.spies||0)+(g.whiteHats||0)>=(demKh(g.players||{}))){alert('Quá nhiều gián điệp/mũ trắng!');return}
   if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
   // Offline: auto-generate players based on total
   if(isOffline) {
@@ -699,18 +699,6 @@ function xuLyRutBai() {
     // All cards done - move to phase
     ghi({phase:'draw_done',status:'phase'});
     return;
-  }
-  // Offline pass-and-play: check name before showing card
-  if(isOffline) {
-    var pData = g.players && g.players[pid];
-    var needName = !pData || !pData.name || pData.name.indexOf('Người ')===0;
-    if(needName) {
-      var dfl = pData && pData.name ? pData.name : 'Người '+(idx+1);
-      var ten = prompt('Người thứ '+(idx+1)+'/'+to.length+' — Nhập tên của bạn:', dfl);
-      if(!ten || !ten.trim()) return;
-      if(!g.players[pid]) g.players[pid] = {};
-      g.players[pid].name = ten.trim();
-    }
   }
   // Offline pass-and-play: show card for whoever's turn it is
   var viewId = isOffline ? pid : myId;
