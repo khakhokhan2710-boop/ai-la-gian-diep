@@ -1111,7 +1111,18 @@ function guiDoan(){
   if(!gus){alert('Nhập từ!');return}
   var cw=(g.pair?g.pair[0]:'').toLowerCase();
   var match=(gus.indexOf(cw)!==-1)||(cw.indexOf(gus)!==-1);
-  ghi({status:'gameover',winner:match?'white_hat':'none'});
+  if(match) {
+    ghi({status:'gameover',winner:'white_hat'});
+  } else {
+    // Mũ Trắng đoán sai → bị loại, game tiếp tục
+    if(isOffline) {
+      var rd=(g.round||1)+1;
+      ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
+    } else {
+      var rd=(g.round||1)+1;
+      ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+    }
+  }
 }
 
 function xuLyGameOver(){
