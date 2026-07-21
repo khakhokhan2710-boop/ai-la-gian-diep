@@ -50,7 +50,7 @@ body::after{
 }
 
 /* === SCREENS === */
-.s{display:none;flex-direction:column;height:100%}
+.s{display:none;flex-direction:column;flex:1;min-height:0}
 .s.a{display:flex;animation:fadeIn 0.4s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -427,8 +427,7 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 </div>
 
 <!-- Name Input -->
-<div class="s tc" id="s9">
- <div class="flex-1"></div>
+<div class="s tc" id="s9" style="justify-content:center">
  <div class="glass" style="width:100%;text-align:center">
   <div style="font-size:48px;margin-bottom:8px">👤</div>
   <h2 style="font-size:24px;margin-bottom:4px">Nhập tên của bạn</h2>
@@ -436,7 +435,6 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
   <input class="inp" id="nameInputPlayer" placeholder="Tên / Biệt danh..." maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')xacNhanTen()" style="text-align:center;font-size:18px;padding:18px;margin-bottom:16px">
   <button class="btn pri" onclick="xacNhanTen()" style="font-size:17px;padding:18px">✅ Xác nhận</button>
  </div>
- <div class="flex-1"></div>
 </div>
 
 <script>
