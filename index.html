@@ -429,10 +429,13 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 <!-- Name Input -->
 <div class="s tc" id="s9">
  <div class="flex-1"></div>
- <h2>👤 Nhập tên của bạn</h2>
- <p class="p">Người thứ <span id="nameIdx">1</span>/<span id="nameTotal">4</span></p>
- <input class="inp" id="nameInputPlayer" placeholder="Tên / Biệt danh..." maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')xacNhanTen()">
- <button class="btn pri" onclick="xacNhanTen()">✅ Xác nhận</button>
+ <div class="glass" style="width:100%;text-align:center">
+  <div style="font-size:48px;margin-bottom:8px">👤</div>
+  <h2 style="font-size:24px;margin-bottom:4px">Nhập tên của bạn</h2>
+  <p class="p" style="font-size:13px;color:#999;margin-bottom:20px">Người thứ <span id="nameIdx" style="color:#818cf8;font-weight:800">1</span>/<span id="nameTotal" style="color:#818cf8;font-weight:800">4</span></p>
+  <input class="inp" id="nameInputPlayer" placeholder="Tên / Biệt danh..." maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')xacNhanTen()" style="text-align:center;font-size:18px;padding:18px;margin-bottom:16px">
+  <button class="btn pri" onclick="xacNhanTen()" style="font-size:17px;padding:18px">✅ Xác nhận</button>
+ </div>
  <div class="flex-1"></div>
 </div>
 
