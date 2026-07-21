@@ -479,15 +479,29 @@ function ghiChild(path, val) {
 
 function taoPhongOffline() {
   isOffline = true;
-  myName = 'Chủ phòng';
+  // Ask for player count
+  var nguoi = prompt('Bao nhiêu người chơi? (2-20)', '4');
+  if(!nguoi) return;
+  var total = parseInt(nguoi);
+  if(isNaN(total)||total<2||total>20) { alert('Từ 2 đến 20 người!'); return; }
+  // Ask for each player's name
+  var players = {};
+  for(var i=1; i<=total; i++) {
+    var ten = prompt('Người '+i+'/'+total+' — Nhập tên của bạn:', 'Người '+i);
+    if(!ten || !ten.trim()) ten = 'Người '+i;
+    var pid = 'p' + i;
+    players[pid] = { name: ten.trim(), joined: true };
+  }
+  myName = players['p1'].name;
   myId = 'p1';
+  var sp = Math.max(1, Math.floor(total * 0.25));
+  var wh = Math.max(0, Math.floor(total * 0.25));
+  if(sp + wh >= total) { wh = Math.max(0, total - sp - 1); }
   gs = {
-    host: myId, hostName: myName, total: 2, spies: 1, whiteHats: 0,
-    status: 'setup', pair: capNN(), players: {}, eliminated: {},
+    host: myId, hostName: myName, total: total, spies: sp, whiteHats: wh,
+    status: 'setup', pair: capNN(), players: players, eliminated: {},
     turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
   };
-  gs.players['p1'] = { name: 'Người 1', joined: true };
-  gs.players['p2'] = { name: 'Người 2', joined: true };
   chuPhong = true; chuanBiXong = false;
   document.getElementById('maPhongDisp').textContent = 'OFFLINE';
   capNhatUI(); hien('s1');
