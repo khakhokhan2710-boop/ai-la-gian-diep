@@ -411,7 +411,18 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px}
  <p class="p" id="subThang"></p>
  <div class="flex-1"></div>
  <button class="btn sec" onclick="roiPhong()">🏠 Về phòng chờ</button>
+ <button class="btn sec" id="choiLaiBtn" style="display:none" onclick="choiLai()">🔄 Chơi lại</button>
 </div>
+</div>
+
+<!-- Name Input -->
+<div class="s tc" id="s9">
+ <div class="flex-1"></div>
+ <h2>👤 Nhập tên của bạn</h2>
+ <p class="p">Người thứ <span id="nameIdx">1</span>/<span id="nameTotal">4</span></p>
+ <input class="inp" id="nameInputPlayer" placeholder="Tên / Biệt danh..." maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')xacNhanTen()">
+ <button class="btn pri" onclick="xacNhanTen()">✅ Xác nhận</button>
+ <div class="flex-1"></div>
 </div>
 
 <script>
@@ -671,6 +682,20 @@ function xuLyRutBai() {
     ghi({phase:'draw_done',status:'phase'});
     return;
   }
+  // Offline pass-and-play: check name before showing card
+  if(isOffline) {
+    var pData = g.players && g.players[pid];
+    var needName = !pData || !pData.name || pData.name.indexOf('Người ')===0;
+    if(needName) {
+      document.getElementById('nameIdx').textContent = idx+1;
+      document.getElementById('nameTotal').textContent = to.length;
+      document.getElementById('nameInputPlayer').value = '';
+      document.getElementById('nameInputPlayer').placeholder = pData && pData.name ? pData.name : 'Tên / Biệt danh...';
+      hien('s9');
+      document.getElementById('nameInputPlayer').focus();
+      return;
+    }
+  }
   // Offline pass-and-play: show card for whoever's turn it is
   var viewId = isOffline ? pid : myId;
   var a=g.assignments[viewId]; if(!a) return;
@@ -737,6 +762,38 @@ function daXong(e){e.stopPropagation();
       ghi({phase:'draw_done',status:'phase'});
     }
   });
+}
+
+function xacNhanTen() {
+  var ten = document.getElementById('nameInputPlayer').value.trim();
+  if(!ten){alert('Nhập tên!');return}
+  var g=gs, to=g.turnOrder||[], idx=g.currentTurn||0, pid=to[idx];
+  if(!pid) return;
+  if(!g.players[pid]) g.players[pid] = {};
+  g.players[pid].name = ten;
+  // Update the name in offline state
+  if(isOffline) { capNhatGame(); } // re-enters xuLyRutBai, now has name -> shows card
+}
+
+function choiLai() {
+  if(isOffline) {
+    // Keep player names, re-roll roles
+    var total = gs.total || 2;
+    var players = {};
+    var names = {};
+    for(var k in (gs.players||{})) {
+      names[k] = gs.players[k].name;
+    }
+    var hostId = myId || 'host';
+    players[hostId] = { name: names[hostId] || 'Người 1', joined: true };
+    for(var i=2; i<=total; i++) {
+      var pid = 'p' + i;
+      players[pid] = { name: names[pid] || 'Người ' + i, joined: true };
+    }
+    gs.players = players;
+    gs.round = 0;
+    batDauVe();
+  }
 }
 
 function xuLyPhase(){
@@ -1067,6 +1124,7 @@ function xuLyGameOver(){
   document.getElementById('iconThang').textContent=icon;
   document.getElementById('textThang').textContent=text;
   document.getElementById('subThang').textContent=sub;
+  document.getElementById('choiLaiBtn').style.display = isOffline ? 'block' : 'none';
   hien('s7');
 }
 
