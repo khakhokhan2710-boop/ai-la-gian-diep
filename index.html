@@ -768,18 +768,19 @@ function daXong(e){e.stopPropagation();
 }
 
 function xacNhanTen() {
-  var ten = document.getElementById('nameInputPlayer').value.trim();
+  var el = document.getElementById('nameInputPlayer');
+  if(!el){alert('Lỗi: không tìm thấy ô nhập!');return}
+  var ten = el.value.trim();
   if(!ten){alert('Nhập tên!');return}
-  var g=gs;
-  if(!g) return;
-  var to=g.turnOrder||[], idx=g.currentTurn||0, pid=to[idx];
-  if(!pid) return;
-  if(!g.players) g.players = {};
-  if(!g.players[pid]) g.players[pid] = {};
-  g.players[pid].name = ten;
-  // Show card for this player
-  var a=g.assignments && g.assignments[pid];
-  if(!a){alert('Lỗi: không tìm thấy role!');return}
+  if(!gs){alert('Lỗi: gs null!');return}
+  var to=gs.turnOrder||[], idx=gs.currentTurn||0, pid=to[idx];
+  if(!pid){alert('Lỗi: pid trống!');return}
+  if(!gs.players) gs.players = {};
+  if(!gs.players[pid]) gs.players[pid] = {};
+  gs.players[pid].name = ten;
+  if(!gs.assignments){alert('Lỗi: chưa có assignments!');return}
+  var a=gs.assignments[pid];
+  if(!a){alert('Lỗi: không tìm thấy role cho '+pid);return}
   currentCardPlayer = {id: pid, a: a, idx: idx, pid: pid};
   document.getElementById('cardIn').classList.remove('f');
   document.getElementById('vaiLabel').textContent = '⚠️';
@@ -787,8 +788,8 @@ function xacNhanTen() {
   document.getElementById('vaiText').className = 'rn';
   document.getElementById('tuText').style.display = 'none';
   document.getElementById('goiYText').textContent = '';
-  var tenHienThi = (g.players[pid] && g.players[pid].name) || 'Người '+(idx+1);
-  document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length+' - '+tenHienThi;
+  var tenHien = (gs.players[pid]&&gs.players[pid].name)||'Người '+(idx+1);
+  document.getElementById('thuTuBai').textContent='Người '+(idx+1)+'/'+to.length+' - '+tenHien;
   hien('s2');
 }
 
