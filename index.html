@@ -774,8 +774,17 @@ function xacNhanTen() {
   if(!pid) return;
   if(!g.players[pid]) g.players[pid] = {};
   g.players[pid].name = ten;
-  // Update the name in offline state
-  if(isOffline) { capNhatGame(); } // re-enters xuLyRutBai, now has name -> shows card
+  // Directly show card, don't wait for capNhatGame
+  var a=g.assignments[pid]; if(!a) return;
+  currentCardPlayer = {id: pid, a: a, idx: idx, pid: pid};
+  document.getElementById('cardIn').classList.remove('f');
+  document.getElementById('vaiLabel').textContent = '⚠️';
+  document.getElementById('vaiText').textContent = '???';
+  document.getElementById('vaiText').className = 'rn';
+  document.getElementById('tuText').style.display = 'none';
+  document.getElementById('goiYText').textContent = '';
+  document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length+' - '+g.players[pid].name;
+  hien('s2');
 }
 
 function choiLai() {
