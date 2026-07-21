@@ -347,12 +347,12 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
     <button class="btn sec" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px">✅ Đã xong</button>
    </div>
   </div>
- </div>
- <div class="sc" id="thuTuBai">Người 1/8</div>
- <div class="flex-1"></div>
-</div>
+  </div>
+  <div class="sc" id="thuTuBai">Người 1/8</div>
+  <div class="flex-1"></div>
+  </div>
 
-<!-- Waiting with timer -->
+  <!-- Waiting with timer -->
 <div class="s" id="s3">
  <div id="nameCardArea" style="display:none;text-align:center;margin-bottom:8px">
   <div style="font-size:12px;color:#666;margin-bottom:4px">🔊 Đang nói:</div>
@@ -414,18 +414,6 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <button class="btn sec" onclick="roiPhong()">🏠 Về phòng chờ</button>
  <button class="btn sec" id="choiLaiBtn" style="display:none" onclick="choiLai()">🔄 Chơi lại</button>
 </div>
-</div>
-
-<!-- Name Input -->
-<div class="s tc" id="s9">
- <div style="flex:1;min-height:24px"></div>
- <div class="glass" style="width:100%;text-align:center;padding:32px 24px">
-  <div style="font-size:48px;margin-bottom:8px">👤</div>
-  <h2 style="font-size:24px;margin-bottom:4px">Nhập tên của bạn</h2>
-  <p class="p" style="font-size:13px;color:#999;margin-bottom:20px">Người thứ <span id="nameIdx" style="color:#818cf8;font-weight:800">1</span>/<span id="nameTotal" style="color:#818cf8;font-weight:800">4</span></p>
-  <input class="inp" id="nameInputPlayer" placeholder="Tên / Biệt danh..." maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')xacNhanTen()" style="text-align:center;font-size:18px;padding:18px;margin-bottom:16px">
-  <button class="btn pri" onclick="xacNhanTen()" style="font-size:17px;padding:18px">✅ Xác nhận</button>
- </div>
 </div>
 
 <script>
@@ -690,13 +678,11 @@ function xuLyRutBai() {
     var pData = g.players && g.players[pid];
     var needName = !pData || !pData.name || pData.name.indexOf('Người ')===0;
     if(needName) {
-      document.getElementById('nameIdx').textContent = idx+1;
-      document.getElementById('nameTotal').textContent = to.length;
-      document.getElementById('nameInputPlayer').value = '';
-      document.getElementById('nameInputPlayer').placeholder = pData && pData.name ? pData.name : 'Tên / Biệt danh...';
-      hien('s9');
-      document.getElementById('nameInputPlayer').focus();
-      return;
+      var dfl = pData && pData.name ? pData.name : 'Người '+(idx+1);
+      var ten = prompt('Người thứ '+(idx+1)+'/'+to.length+' — Nhập tên của bạn:', dfl);
+      if(!ten || !ten.trim()) return;
+      if(!g.players[pid]) g.players[pid] = {};
+      g.players[pid].name = ten.trim();
     }
   }
   // Offline pass-and-play: show card for whoever's turn it is
@@ -765,32 +751,6 @@ function daXong(e){e.stopPropagation();
       ghi({phase:'draw_done',status:'phase'});
     }
   });
-}
-
-function xacNhanTen() {
-  var el = document.getElementById('nameInputPlayer');
-  if(!el){alert('Lỗi: không tìm thấy ô nhập!');return}
-  var ten = el.value.trim();
-  if(!ten){alert('Nhập tên!');return}
-  if(!gs){alert('Lỗi: gs null!');return}
-  var to=gs.turnOrder||[], idx=gs.currentTurn||0, pid=to[idx];
-  if(!pid){alert('Lỗi: pid trống!');return}
-  if(!gs.players) gs.players = {};
-  if(!gs.players[pid]) gs.players[pid] = {};
-  gs.players[pid].name = ten;
-  if(!gs.assignments){alert('Lỗi: chưa có assignments!');return}
-  var a=gs.assignments[pid];
-  if(!a){alert('Lỗi: không tìm thấy role cho '+pid);return}
-  currentCardPlayer = {id: pid, a: a, idx: idx, pid: pid};
-  document.getElementById('cardIn').classList.remove('f');
-  document.getElementById('vaiLabel').textContent = '⚠️';
-  document.getElementById('vaiText').textContent = '???';
-  document.getElementById('vaiText').className = 'rn';
-  document.getElementById('tuText').style.display = 'none';
-  document.getElementById('goiYText').textContent = '';
-  var tenHien = (gs.players[pid]&&gs.players[pid].name)||'Người '+(idx+1);
-  document.getElementById('thuTuBai').textContent='Người '+(idx+1)+'/'+to.length+' - '+tenHien;
-  hien('s2');
 }
 
 function choiLai() {
