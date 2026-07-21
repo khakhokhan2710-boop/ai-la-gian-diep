@@ -440,6 +440,7 @@ var valueLis = null;
 var playerLis = null;
 var isOffline = false;
 var offlineTimerInterval = null;
+var currentCardPlayer = null;
 
 function doc() {
   if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
@@ -676,16 +677,15 @@ function xuLyRutBai() {
   var daXem = g.cardsSeen && g.cardsSeen[viewId];
   if(isOffline || pid===myId){
     if(!daXem){
-      document.getElementById('vaiLabel').textContent = 'Vai trò';
-      var vt = document.getElementById('vaiText');
-      if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
-      else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
-      else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
-      var tw = document.getElementById('tuText');
-      if(a.word){tw.style.display='block';tw.textContent=a.word}
-      else tw.style.display='none';
-      document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
+      // Store current player for latBai to fill
+      currentCardPlayer = {id: viewId, a: a, idx: idx, pid: pid};
+      // Clear card content completely before showing
       document.getElementById('cardIn').classList.remove('f');
+      document.getElementById('vaiLabel').textContent = '⚠️';
+      document.getElementById('vaiText').textContent = '???';
+      document.getElementById('vaiText').className = 'rn';
+      document.getElementById('tuText').style.display = 'none';
+      document.getElementById('goiYText').textContent = '';
       document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length+' - '+g.players[pid].name;
       hien('s2');
     } else {
@@ -696,7 +696,20 @@ function xuLyRutBai() {
   }
 }
 
-function latBai(){document.getElementById('cardIn').classList.add('f')}
+function latBai(){
+  if(!currentCardPlayer) return;
+  var cp = currentCardPlayer, a = cp.a;
+  document.getElementById('vaiLabel').textContent = 'Vai trò';
+  var vt = document.getElementById('vaiText');
+  if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
+  else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
+  else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
+  var tw = document.getElementById('tuText');
+  if(a.word){tw.style.display='block';tw.textContent=a.word}
+  else tw.style.display='none';
+  document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
+  document.getElementById('cardIn').classList.add('f');
+}
 function daXong(e){e.stopPropagation();
   var g=gs, to=g.turnOrder||[], cur=g.currentTurn||0, pid=(isOffline?(to[cur]||myId):myId);
   if(isOffline) {
@@ -922,6 +935,14 @@ function xuLyVote(){
   document.getElementById('voteDaVote').textContent=daVote;
   
   var list=document.getElementById('voteList');list.innerHTML='';binhChon=null;
+  if(isOffline) {
+    // Offline: 1 click = eliminate directly, no vote button needed
+    document.getElementById('voteBtn').style.display='none';
+    document.getElementById('voteTong').parentElement.style.display='none';
+  } else {
+    document.getElementById('voteBtn').style.display='block';
+    document.getElementById('voteTong').parentElement.style.display='block';
+  }
   for(var i=0;i<al.length;i++){
     var pid=al[i],p=g.players[pid];if(!p)continue;
     var vf=0, aiVote=[];
@@ -934,6 +955,19 @@ function xuLyVote(){
       '<span class="v-count">'+(vf>0?'<b>'+vf+'</b> phiếu':'0')+'</span>' +
       '<span class="v-check"></span>';
     (function(p2){d.onclick=function(){
+      if(isOffline) {
+        // Offline: 1 click = eliminate immediately
+        var a = g.assignments || {};
+        var role = (a[p2] && a[p2].role) || 'unknown';
+        g.eliminated = g.eliminated || {};
+        g.eliminated[p2] = true;
+        g.lastEliminated = p2;
+        g.lastRole = role;
+        g.status = 'result';
+        ghi({eliminated:g.eliminated,status:'result',lastEliminated:p2,lastRole:role});
+        xuLyKetQua();
+        return;
+      }
       if(v[myId]) return;
       var sl=document.querySelectorAll('.vote-item');for(var x=0;x<sl.length;x++)sl[x].classList.remove('selected');
       this.classList.add('selected');binhChon=p2;document.getElementById('voteBtn').disabled=false;
@@ -999,6 +1033,12 @@ function tiepTheo(){
   for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
   if(sp>0&&cv<=Math.floor(ic*0.4)){ghi({status:'gameover',winner:'spy'});return}
   if(sp===0){ghi({status:'gameover',winner:'civilian'});return}
+  if(isOffline){
+    // Offline: continue voting immediately, one elimination per round
+    var rd=(g.round||1)+1;
+    ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
+    return;
+  }
   // Back to timer + chat for next round (3 min)
   var rd=(g.round||1)+1;
   ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
