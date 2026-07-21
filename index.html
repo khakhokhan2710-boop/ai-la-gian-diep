@@ -313,22 +313,20 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 
 <!-- Setup -->
 <div class="s" id="s1">
- <div class="flex-1"></div>
+ <div class="flex-1" style="flex:0;min-height:10px"></div>
  <h2>⚙️ Cài đặt</h2>
- <p class="p">Mã phòng: <strong id="maPhongDisp" style="color:#818cf8;letter-spacing:0.1em"></strong></p>
- <div class="mb8"><span style="color:#666;font-size:13px">Đã vào:</span> <span id="dsNguoi"></span></div>
- <div class="mb8"><span style="color:#666;font-size:13px">Số người:</span></div>
- <div class="row">
-  <button class="adj" onclick="adjTong(-1)">−</button>
-  <span class="num" id="numTong">8</span>
-  <button class="adj" onclick="adjTong(1)">+</button>
+ <p class="p">Mã phòng: <strong id="maPhongDisp" style="color:#818cf8;letter-spacing:0.1em" data-offline-text="OFFLINE"></strong></p>
+ <div style="margin:12px 0">
+  <div style="font-size:13px;color:#999;margin-bottom:8px">Danh sách (<span id="numTong">2</span> người):</div>
+  <div id="playerListSetup" style="display:flex;flex-wrap:wrap;gap:6px;min-height:36px;align-items:center"></div>
+  <button class="btn sec" onclick="themNguoi()" id="themNguoiBtn" style="width:100%;padding:10px;margin-top:10px;font-size:14px">+ Thêm người</button>
  </div>
  <div class="row" style="gap:8px">
-  <div class="slot"><div class="lb">👤 Dân</div><div class="ct" id="numDan">4</div></div>
-  <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">2</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
-  <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">2</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
+  <div class="slot"><div class="lb">👤 Dân</div><div class="ct" id="numDan">1</div></div>
+  <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">1</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
+  <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">0</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
  </div>
- <div class="flex-1"></div>
+ <div class="flex-1" style="flex:0;min-height:10px"></div>
  <button class="btn pri" onclick="batDau()">🚀 Bắt đầu</button>
  <button class="btn sec" onclick="roiPhong()">🚪 Rời phòng</button>
 </div>
@@ -482,13 +480,14 @@ function ghiChild(path, val) {
 function taoPhongOffline() {
   isOffline = true;
   myName = 'Chủ phòng';
-  myId = 'host';
+  myId = 'p1';
   gs = {
     host: myId, hostName: myName, total: 2, spies: 1, whiteHats: 0,
     status: 'setup', pair: capNN(), players: {}, eliminated: {},
     turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
   };
-  gs.players[myId] = { name: myName, joined: true };
+  gs.players['p1'] = { name: 'Người 1', joined: true };
+  gs.players['p2'] = { name: 'Người 2', joined: true };
   chuPhong = true; chuanBiXong = false;
   document.getElementById('maPhongDisp').textContent = 'OFFLINE';
   capNhatUI(); hien('s1');
@@ -563,14 +562,17 @@ function langNghe() {
 
 function capNhatUI() {
   if(!gs) return;
-  document.getElementById('numTong').textContent = gs.total||0;
-  var sp = gs.spies||0, wh = gs.whiteHats||0;
-  document.getElementById('numDan').textContent = (gs.total||0) - sp - wh;
+  var sp = gs.spies||0, wh = gs.whiteHats||0, pl = gs.players||{};
+  var total = demKh(pl);
+  gs.total = total;
+  document.getElementById('numTong').textContent = total;
+  document.getElementById('numDan').textContent = total - sp - wh;
   document.getElementById('numSpy').textContent = sp;
   document.getElementById('numHat').textContent = wh;
-  var pl = gs.players||{}, arr = [];
-  for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+'</span>');
-  document.getElementById('dsNguoi').innerHTML = arr.join('')||'<span style="color:#444">Chưa có ai</span>';
+  var arr = [];
+  for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+' <span onclick="xoaNguoi(\''+k+'\')" style="cursor:pointer;color:#f87171;font-weight:700;margin-left:4px">✕</span></span>');
+  document.getElementById('playerListSetup').innerHTML = arr.join('')||'<span style="color:#444;font-size:13px">Chưa có ai</span>';
+  if(isOffline) document.getElementById('themNguoiBtn').style.display = 'block';
 }
 
 function capNhatGame() {
@@ -596,7 +598,34 @@ function adjTong(d) {
     ghi({total:n,spies:s,whiteHats:w});
   });
 }
+function themNguoi() {
+  if(isOffline) {
+    var ten = prompt('Tên người chơi mới:');
+    if(!ten || !ten.trim()) return;
+    var pid = 'p' + (Date.now() % 100000);
+    gs.players[pid] = { name: ten.trim(), joined: true };
+    var sp = gs.spies||0, wh = gs.whiteHats||0;
+    if(gs.total+1 - sp - wh < 1) gs.spies = Math.max(0, sp - 1);
+    capNhatUI();
+  }
+}
+function xoaNguoi(pid) {
+  if(!isOffline) return;
+  var pl = gs.players||{};
+  if(demKh(pl) <= 2) { alert('Cần ít nhất 2 người!'); return; }
+  delete gs.players[pid];
+  var sp = Math.min(gs.spies||0, demKh(gs.players)-1-(gs.whiteHats||0));
+  gs.spies = sp;
+  capNhatUI();
+}
+
 function adjSpy(d) {
+  if(isOffline) {
+    var n=(gs.spies||0)+d; if(n<0)n=0;
+    var m=demKh(gs.players||{})-(gs.whiteHats||0)-1; if(n>m)n=m;
+    gs.spies = n; capNhatUI();
+    return;
+  }
   doc().then(function(snap){
     var g=snap.val();if(!g)return;
     var n=(g.spies||0)+d;if(n<0)n=0;
@@ -605,6 +634,12 @@ function adjSpy(d) {
   });
 }
 function adjHat(d) {
+  if(isOffline) {
+    var n=(gs.whiteHats||0)+d; if(n<0)n=0;
+    var m=demKh(gs.players||{})-(gs.spies||0)-1; if(n>m)n=m;
+    gs.whiteHats = n; capNhatUI();
+    return;
+  }
   doc().then(function(snap){
     var g=snap.val();if(!g)return;
     var n=(g.whiteHats||0)+d;if(n<0)n=0;
@@ -620,16 +655,8 @@ function batDau() {
   if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
   // Offline: auto-generate players based on total
   if(isOffline) {
-    var total = g.total || 2;
-    var players = {};
-    var hostId = myId || 'host';
-    players[hostId] = { name: 'Người 1', joined: true };
-    for(var i=2; i<=total; i++) {
-      players['p' + i] = { name: 'Người ' + i, joined: true };
-    }
-    g.players = players;
-    gs.players = players;
-    batDauVe(); return; // Offline: start immediately
+    // Use the player list set up in UI
+    batDauVe(); return;
   }
   ghi({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
@@ -756,20 +783,12 @@ function daXong(e){e.stopPropagation();
 function choiLai() {
   if(isOffline) {
     // Keep player names, re-roll roles
-    var total = gs.total || 2;
-    var players = {};
-    var names = {};
-    for(var k in (gs.players||{})) {
-      names[k] = gs.players[k].name;
-    }
-    var hostId = myId || 'host';
-    players[hostId] = { name: names[hostId] || 'Người 1', joined: true };
-    for(var i=2; i<=total; i++) {
-      var pid = 'p' + i;
-      players[pid] = { name: names[pid] || 'Người ' + i, joined: true };
-    }
-    gs.players = players;
     gs.round = 0;
+    gs.cardsSeen = {};
+    gs.eliminated = {};
+    gs.votes = {};
+    gs.currentTurn = -1;
+    gs.pair = capNN();
     batDauVe();
   }
 }
