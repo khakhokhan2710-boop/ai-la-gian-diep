@@ -311,6 +311,20 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <div class="flex-1"></div>
 </div>
 
+<!-- Name Entry (Offline) -->
+<div class="s tc" id="s9">
+ <div class="flex-1"></div>
+ <div class="glass" style="width:100%;text-align:center;padding:32px 24px">
+  <div style="font-size:48px;margin-bottom:8px">👤</div>
+  <h2 style="font-size:22px;margin-bottom:4px" id="s9Title">Bao nhiêu người chơi?</h2>
+  <p class="p" style="font-size:13px;color:#999;margin-bottom:16px" id="s9Sub"></p>
+  <input class="inp" id="s9Input" placeholder="Nhập..." style="text-align:center;font-size:18px;padding:18px;margin-bottom:16px">
+  <button class="btn pri" onclick="s9Next()" style="font-size:17px;padding:18px" id="s9Btn">Tiếp tục</button>
+  <button class="btn sec" onclick="hien('s0')" style="font-size:14px;padding:12px;margin-top:8px">← Quay lại</button>
+ </div>
+ <div class="flex-1"></div>
+</div>
+
 <!-- Setup -->
 <div class="s" id="s1">
  <div class="flex-1" style="flex:0;min-height:10px"></div>
@@ -441,6 +455,10 @@ var playerLis = null;
 var isOffline = false;
 var offlineTimerInterval = null;
 var currentCardPlayer = null;
+var s9Step = 0; // 0=ask count, 1+=ask name for each
+var s9Total = 0;
+var s9Names = [];
+var s9Players = {};
 
 function doc() {
   if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
@@ -479,32 +497,67 @@ function ghiChild(path, val) {
 
 function taoPhongOffline() {
   isOffline = true;
-  // Ask for player count
-  var nguoi = prompt('Bao nhiêu người chơi? (2-20)', '4');
-  if(!nguoi) return;
-  var total = parseInt(nguoi);
-  if(isNaN(total)||total<2||total>20) { alert('Từ 2 đến 20 người!'); return; }
-  // Ask for each player's name
-  var players = {};
-  for(var i=1; i<=total; i++) {
-    var ten = prompt('Người '+i+'/'+total+' — Nhập tên của bạn:', 'Người '+i);
-    if(!ten || !ten.trim()) ten = 'Người '+i;
-    var pid = 'p' + i;
-    players[pid] = { name: ten.trim(), joined: true };
+  s9Step = 0; s9Total = 0; s9Names = []; s9Players = {};
+  document.getElementById('s9Title').textContent = 'Bao nhiêu người chơi?';
+  document.getElementById('s9Sub').textContent = '';
+  document.getElementById('s9Input').value = '4';
+  document.getElementById('s9Input').placeholder = 'Số người (2-20)';
+  document.getElementById('s9Input').type = 'number';
+  document.getElementById('s9Input').setAttribute('min','2');
+  document.getElementById('s9Input').setAttribute('max','20');
+  document.getElementById('s9Input').onkeydown = function(e){if(e.key==='Enter')s9Next()};
+  document.getElementById('s9Btn').textContent = 'Tiếp tục';
+  hien('s9');
+  document.getElementById('s9Input').focus();
+}
+
+function s9Next() {
+  var val = document.getElementById('s9Input').value.trim();
+  if(!val) { alert('Nhập vào!'); return; }
+  if(s9Step === 0) {
+    // Asking for player count
+    var n = parseInt(val);
+    if(isNaN(n)||n<2||n>20) { alert('Từ 2 đến 20!'); return; }
+    s9Total = n; s9Step = 1;
+    document.getElementById('s9Title').textContent = 'Người chơi 1/'+s9Total;
+    document.getElementById('s9Sub').textContent = 'Nhập tên hoặc biệt danh';
+    document.getElementById('s9Input').value = '';
+    document.getElementById('s9Input').placeholder = 'Tên của bạn...';
+    document.getElementById('s9Input').type = 'text';
+    document.getElementById('s9Input').removeAttribute('min');
+    document.getElementById('s9Input').removeAttribute('max');
+    document.getElementById('s9Btn').textContent = 'Tiếp tục';
+    document.getElementById('s9Input').focus();
+  } else {
+    // Collecting names
+    var ten = val;
+    s9Names.push(ten);
+    if(s9Step < s9Total) {
+      s9Step++;
+      document.getElementById('s9Title').textContent = 'Người chơi '+s9Step+'/'+s9Total;
+      document.getElementById('s9Input').value = '';
+      document.getElementById('s9Btn').textContent = s9Step === s9Total ? 'Bắt đầu' : 'Tiếp tục';
+      document.getElementById('s9Input').focus();
+    } else {
+      // All names entered — create game
+      myId = 'p1'; myName = s9Names[0] || 'Người 1';
+      var players = {};
+      for(var i=0; i<s9Names.length; i++) {
+        players['p'+(i+1)] = { name: s9Names[i], joined: true };
+      }
+      var sp = Math.max(1, Math.floor(s9Total * 0.25));
+      var wh = Math.max(0, Math.floor(s9Total * 0.25));
+      if(sp + wh >= s9Total) { wh = Math.max(0, s9Total - sp - 1); }
+      gs = {
+        host: myId, hostName: myName, total: s9Total, spies: sp, whiteHats: wh,
+        status: 'setup', pair: capNN(), players: players, eliminated: {},
+        turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
+      };
+      chuPhong = true; chuanBiXong = false;
+      document.getElementById('maPhongDisp').textContent = 'OFFLINE';
+      capNhatUI(); hien('s1');
+    }
   }
-  myName = players['p1'].name;
-  myId = 'p1';
-  var sp = Math.max(1, Math.floor(total * 0.25));
-  var wh = Math.max(0, Math.floor(total * 0.25));
-  if(sp + wh >= total) { wh = Math.max(0, total - sp - 1); }
-  gs = {
-    host: myId, hostName: myName, total: total, spies: sp, whiteHats: wh,
-    status: 'setup', pair: capNN(), players: players, eliminated: {},
-    turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
-  };
-  chuPhong = true; chuanBiXong = false;
-  document.getElementById('maPhongDisp').textContent = 'OFFLINE';
-  capNhatUI(); hien('s1');
 }
 
 var deviceId = localStorage.getItem('devId');
@@ -713,18 +766,6 @@ function xuLyRutBai() {
     // All cards done - move to phase
     ghi({phase:'draw_done',status:'phase'});
     return;
-  }
-  // Offline pass-and-play: check name before showing card
-  if(isOffline) {
-    var pData = g.players && g.players[pid];
-    var needName = !pData || !pData.name || pData.name.indexOf('Người ')===0;
-    if(needName) {
-      var dfl = pData && pData.name ? pData.name : 'Người '+(idx+1);
-      var ten = prompt('Người '+(idx+1)+'/'+to.length+' — Nhập tên của bạn:', dfl);
-      if(!ten || !ten.trim()) { alert('Phải nhập tên!'); return; }
-      if(!g.players[pid]) g.players[pid] = {};
-      g.players[pid].name = ten.trim();
-    }
   }
   // Offline pass-and-play: show card for whoever's turn it is
   var viewId = isOffline ? pid : myId;
