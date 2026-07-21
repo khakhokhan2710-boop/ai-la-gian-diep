@@ -56,11 +56,12 @@ body::after{
 
 /* === GLASS CARDS === */
 .glass{
-  background:rgba(255,255,255,0.06);backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
+  background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,0.1);
   border-radius:20px;padding:24px 20px;
   box-shadow:0 20px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
+  transform:translateZ(0);
 }
 
 /* === GRADIENT TEXT === */
@@ -153,7 +154,7 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 .card-in{
   position:relative;width:100%;height:100%;
   transition:transform 0.8s cubic-bezier(0.2,0.8,0.3,1.2);
-  transform-style:preserve-3d;
+  transform-style:preserve-3d;will-change:transform;
 }
 .card-in.f{transform:rotateY(180deg)}
 .card-face{
@@ -1177,16 +1178,16 @@ setInterval(function(){
   var c=document.getElementById('particles');
   var ctx=c.getContext('2d');
   var particles=[];
-  var colors=['#6366f1','#818cf8','#a78bfa','#c084fc','#8b5cf6','#4f46e5'];
+  var colors=['#6366f1','#818cf8','#a78bfa','#8b5cf6'];
   function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
   resize();window.addEventListener('resize',resize);
-  for(var i=0;i<12;i++){
+  for(var i=0;i<8;i++){
     particles.push({
       x:Math.random()*c.width,
       y:Math.random()*c.height,
-      r:Math.random()*2+0.5,
-      vx:(Math.random()-0.5)*0.3,
-      vy:-(Math.random()*0.5+0.2),
+      r:Math.random()*1.5+0.5,
+      vx:(Math.random()-0.5)*0.2,
+      vy:-(Math.random()*0.3+0.15),
       c:colors[Math.floor(Math.random()*colors.length)],
       o:Math.random()*0.5+0.1
     });
@@ -1202,7 +1203,7 @@ setInterval(function(){
       ctx.fillStyle=p.c;ctx.globalAlpha=p.o;ctx.fill();
     }
     ctx.globalAlpha=1;
-    setTimeout(draw,67);
+    setTimeout(draw,100);
   }
   draw();
 })();
