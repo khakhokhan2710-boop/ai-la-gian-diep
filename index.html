@@ -26,16 +26,8 @@ body::after{
   background:
     radial-gradient(circle at 80% 80%,rgba(99,102,241,0.12) 0%,transparent 50%),
     radial-gradient(circle at 20% 20%,rgba(139,92,246,0.08) 0%,transparent 40%);
-  animation:bgshift 12s ease-in-out infinite alternate;
   z-index:0;
 }
-@keyframes bgshift{
-  0%{opacity:0.6;transform:scale(1)}
-  100%{opacity:1;transform:scale(1.1)}
-}
-
-/* === FLOATING PARTICLES (canvas) === */
-#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
 
 /* === APP SHELL === */
 .app{
@@ -56,12 +48,10 @@ body::after{
 
 /* === GLASS CARDS === */
 .glass{
-  background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  background:rgba(10,10,25,0.75);
   border:1px solid rgba(255,255,255,0.1);
   border-radius:20px;padding:24px 20px;
   box-shadow:0 20px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
-  transform:translateZ(0);
 }
 
 /* === GRADIENT TEXT === */
@@ -292,7 +282,6 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 </style>
 </head>
 <body>
-<canvas id="particles"></canvas>
 <div class="app">
 <!-- Lobby -->
 <div class="s a" id="s0">
@@ -428,8 +417,9 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 </div>
 
 <!-- Name Input -->
-<div class="s tc" id="s9" style="justify-content:center">
- <div class="glass" style="width:100%;text-align:center">
+<div class="s tc" id="s9">
+ <div style="flex:1;min-height:24px"></div>
+ <div class="glass" style="width:100%;text-align:center;padding:32px 24px">
   <div style="font-size:48px;margin-bottom:8px">👤</div>
   <h2 style="font-size:24px;margin-bottom:4px">Nhập tên của bạn</h2>
   <p class="p" style="font-size:13px;color:#999;margin-bottom:20px">Người thứ <span id="nameIdx" style="color:#818cf8;font-weight:800">1</span>/<span id="nameTotal" style="color:#818cf8;font-weight:800">4</span></p>
@@ -1172,41 +1162,6 @@ setInterval(function(){
   var all=true; for(var i=0;i<to.length;i++){if(!seen[to[i]]){all=false;break}}
   if(all&&(g.currentTurn||0)>=to.length) ghiChild('phase','draw_done');
 },2000);
-
-// === PARTICLE ANIMATION ===
-(function(){
-  var c=document.getElementById('particles');
-  var ctx=c.getContext('2d');
-  var particles=[];
-  var colors=['#6366f1','#818cf8','#a78bfa','#8b5cf6'];
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
-  resize();window.addEventListener('resize',resize);
-  for(var i=0;i<8;i++){
-    particles.push({
-      x:Math.random()*c.width,
-      y:Math.random()*c.height,
-      r:Math.random()*1.5+0.5,
-      vx:(Math.random()-0.5)*0.2,
-      vy:-(Math.random()*0.3+0.15),
-      c:colors[Math.floor(Math.random()*colors.length)],
-      o:Math.random()*0.5+0.1
-    });
-  }
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<particles.length;i++){
-      var p=particles[i];
-      p.x+=p.vx;p.y+=p.vy;
-      if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width}
-      if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=p.c;ctx.globalAlpha=p.o;ctx.fill();
-    }
-    ctx.globalAlpha=1;
-    setTimeout(draw,100);
-  }
-  draw();
-})();
 </script>
 <script src="agentation-bundle.js"></script>
 </body>
