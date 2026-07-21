@@ -664,26 +664,33 @@ function batDauVe() {
 
 function xuLyRutBai() {
   var g=gs; if(!g.assignments) return;
-  var a=g.assignments[myId]; if(!a) return;
   var to=g.turnOrder||[], idx=g.currentTurn||0, pid=to[idx];
-  var luotToi = (pid===myId);
-  var daXem = g.cardsSeen && g.cardsSeen[myId];
-  if(luotToi && !daXem){
-    document.getElementById('vaiLabel').textContent = 'Vai trò';
-    var vt = document.getElementById('vaiText');
-    if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
-    else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
-    else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
-    var tw = document.getElementById('tuText');
-    if(a.word){tw.style.display='block';tw.textContent=a.word}
-    else tw.style.display='none';
-    document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
-    document.getElementById('cardIn').classList.remove('f');
-    document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length;
-    hien('s2');
-    console.log('SHOW CARD for', myName, 'role:', a.role);
-  } else if(daXem) {
-    hien('s3'); document.getElementById('waitTitle').textContent='✅ Đã xem rồi!';document.getElementById('waitSub').textContent='Chờ...';
+  if(!pid) {
+    // All cards done - move to phase
+    ghi({phase:'draw_done',status:'phase'});
+    return;
+  }
+  // Offline pass-and-play: show card for whoever's turn it is
+  var viewId = isOffline ? pid : myId;
+  var a=g.assignments[viewId]; if(!a) return;
+  var daXem = g.cardsSeen && g.cardsSeen[viewId];
+  if(isOffline || pid===myId){
+    if(!daXem){
+      document.getElementById('vaiLabel').textContent = 'Vai trò';
+      var vt = document.getElementById('vaiText');
+      if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
+      else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
+      else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
+      var tw = document.getElementById('tuText');
+      if(a.word){tw.style.display='block';tw.textContent=a.word}
+      else tw.style.display='none';
+      document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
+      document.getElementById('cardIn').classList.remove('f');
+      document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length+' - '+g.players[pid].name;
+      hien('s2');
+    } else {
+      hien('s3'); document.getElementById('waitTitle').textContent='✅ Đã xem rồi!';document.getElementById('waitSub').textContent='Chờ...';
+    }
   } else {
     hien('s3'); document.getElementById('waitTitle').textContent='⏳ Đang rút bài...';document.getElementById('waitSub').textContent=(idx+1)+'/'+to.length+' - lượt người số '+(idx+1);
   }
@@ -691,13 +698,20 @@ function xuLyRutBai() {
 
 function latBai(){document.getElementById('cardIn').classList.add('f')}
 function daXong(e){e.stopPropagation();
-  var cur = gs.currentTurn || 0;
-  ghiChild('cardsSeen/'+myId, true);
+  var g=gs, to=g.turnOrder||[], cur=g.currentTurn||0, pid=(isOffline?(to[cur]||myId):myId);
+  if(isOffline) {
+    // Update both in one shot to avoid intermediate capNhatGame
+    if(!g.cardsSeen) g.cardsSeen={};
+    g.cardsSeen[pid]=true;
+    g.currentTurn=cur+1;
+    capNhatGame(); // calls xuLyRutBai which shows next card or phase
+    return;
+  }
+  ghiChild('cardsSeen/'+pid, true);
   ghiChild('currentTurn', cur + 1);
   hien('s3');
   document.getElementById('waitTitle').textContent='✅ Đã xem!';
   document.getElementById('waitSub').textContent='Chờ người tiếp theo...';
-  // Read fresh data from Firebase (not cache) to check all done
   doc().then(function(snap){
     var g2 = snap.val();
     if(!g2) return;
