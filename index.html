@@ -447,6 +447,9 @@ function doc() {
 }
 
 function ghi(path, data) {
+  if(typeof path === 'object' && path !== null && data === undefined) {
+    data = path; path = null;
+  }
   if(isOffline) {
     for(var k in data) { gs[k] = data[k]; }
     capNhatGame();
@@ -1069,5 +1072,6 @@ setInterval(function(){
   draw();
 })();
 </script>
+<script src="agentation-bundle.js"></script>
 </body>
 </html>

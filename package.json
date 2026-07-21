@@ -1,0 +1,11 @@
+{
+  "name": "ai-la-gian-diep",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ai Là Gián Điệp - Party Game",
+  "dependencies": {
+    "agentation": "^3.0.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  }
+}

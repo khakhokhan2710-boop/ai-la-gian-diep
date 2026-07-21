@@ -1,1 +1,4 @@
-game-spec.md
+node_modules/
+package-lock.json
+agentation-bundle.js
+agentation-entry.jsx
