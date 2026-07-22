@@ -1398,10 +1398,13 @@ function xuLyDoan(){
       if(left <= 5) document.getElementById('guessTimer').style.color = '#f87171';
       if(left <= 0) {
         clearInterval(guessTimerInterval); guessTimerInterval = null;
-        // Time's up — auto eliminate, game continues
-        var g2 = gs;
-        if(isOffline) { var rd=(g2.round||1)+1; ghi({status:'voting',phase:'vote_round',round:rd,votes:{}}); }
-        else { var rd=(g2.round||1)+1; ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd}); }
+        // Time's up — offline: go straight to vote
+        if(isOffline) {
+          var g2=gs; g2.status='voting';g2.phase='vote_round';g2.round=(g2.round||1)+1;g2.votes={};
+          hien('s4');xuLyVote();
+        } else {
+          var g2=gs; var rd=(g2.round||1)+1; ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+        }
       }
     }, 1000);
   }
@@ -1417,13 +1420,13 @@ function guiDoan(){
   if(match) {
     ghi({status:'gameover',winner:'white_hat'});
   } else {
-    // Mũ Trắng đoán sai → bị loại, game tiếp tục ngay
+    // Mũ Trắng đoán sai → bị loại, vote tiếp luôn
     if(isOffline) {
-      var rd=(gs.round||1)+1;
-      ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
+      gs.status='voting';gs.phase='vote_round';gs.round=(gs.round||1)+1;gs.votes={};
+      hien('s4');xuLyVote();
     } else {
       var rd=(gs.round||1)+1;
-      ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+      ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
     }
   }
 }
