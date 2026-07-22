@@ -562,6 +562,30 @@ function s9Next() {
 var deviceId = localStorage.getItem('devId');
 if(!deviceId) { deviceId = 'd' + Math.random().toString(36).substr(2,8) + Date.now().toString(36); localStorage.setItem('devId', deviceId); }
 
+// Auto-rejoin on page reload
+(function(){
+  var saved = localStorage.getItem('lastRoom');
+  var savedName = localStorage.getItem('lastName');
+  if(saved && savedName && !isOffline) {
+    myName = savedName; maPhong = saved;
+    roomRef = db.ref('rooms/' + saved);
+    doc().then(function(snap) {
+      if(!snap.exists()) { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
+      var g = snap.val();
+      if(g.status==='gameover') { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
+      // Find our player ID
+      var pl = g.players||{};
+      for(var k in pl) {
+        if(pl[k].deviceId === deviceId) { myId = k; break; }
+      }
+      if(!myId) { myId = randId(); ghiChild('players/'+myId, {name:savedName,deviceId:deviceId}); }
+      if(g.host === myId) chuPhong = true;
+      gs = g; langNghe();
+      capNhatGame();
+    });
+  }
+})();
+
 fetch('word_pairs.json').then(function(r){return r.json()}).then(function(d){wp=d}).catch(function(){wp=[['a','b','c']]});
 function capNN(){return wp[Math.floor(Math.random()*wp.length)]}
 function randId(){return Math.random().toString(36).substr(2,8)+Date.now().toString(36)}
@@ -584,6 +608,8 @@ function taoPhong() {
   data.players[myId] = { name: ten, deviceId: deviceId };
   roomRef.set(data).then(function(){
     chuPhong = true; gs = data; langNghe();
+    localStorage.setItem('lastRoom', maPhong);
+    localStorage.setItem('lastName', ten);
     document.getElementById('maPhongDisp').textContent = maPhong;
     capNhatUI(); hien('s1');
   }).catch(function(e){alert('Lỗi: '+e.message)});
@@ -605,6 +631,8 @@ function vaoPhong() {
     if(demKh(pl) >= (g.total||8)){alert('Phòng đầy!');return}
     myId = randId();
     ghiChild('players/'+myId, {name:ten,deviceId:deviceId});
+    localStorage.setItem('lastRoom', maPhong);
+    localStorage.setItem('lastName', ten);
     langNghe(); hien('s3');
     document.getElementById('waitTitle').textContent = '⏳ Đã vào phòng!';
     document.getElementById('waitSub').textContent = 'Chờ chủ phòng bắt đầu 3 phút...';
@@ -844,6 +872,15 @@ function choiLai() {
     gs.currentTurn = -1;
     gs.pair = capNN();
     batDauVe();
+  } else if(roomRef && chuPhong) {
+    // Online: reset game state on Firebase, keep players
+    roomRef.update({
+      round: 0, cardsSeen: {}, eliminated: {}, votes: {},
+      currentTurn: -1, pair: capNN(), status: 'drawing',
+      phase: 'join'
+    }).then(function() {
+      batDauVe();
+    }).catch(function(e) { alert('Lỗi: ' + e.message); });
   }
 }
 
@@ -1191,7 +1228,13 @@ function xuLyGameOver(){
   document.getElementById('iconThang').textContent=icon;
   document.getElementById('textThang').textContent=text;
   document.getElementById('subThang').textContent=sub;
-  document.getElementById('choiLaiBtn').style.display = isOffline ? 'block' : 'none';
+  document.getElementById('choiLaiBtn').style.display = 'block';
+  if(chuPhong) {
+    document.getElementById('choiLaiBtn').textContent = '🔄 Chơi tiếp';
+    document.getElementById('choiLaiBtn').style.display = 'block';
+  } else {
+    document.getElementById('choiLaiBtn').style.display = 'none';
+  }
   hien('s7');
 }
 
@@ -1202,6 +1245,7 @@ function roiPhong(){
     if(chuPhong)roomRef.remove().catch(function(){});
     else if(myId)roomRef.child('players/'+myId).remove().catch(function(){})}
   roomRef=null;myId=null;chuPhong=false;chuanBiXong=false;binhChon=null;gs={};
+  localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName');
   document.getElementById('nameInput').value='';document.getElementById('maPhongInput').value='';
   document.getElementById('doanInput').value='';
   hien('s0');
