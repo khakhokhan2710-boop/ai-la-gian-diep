@@ -484,32 +484,36 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <button class="exit-btn" onclick="hien('s0')">✕</button>
  <h2 style="text-align:center;margin:16px 0 4px">📖 Hướng dẫn</h2>
  <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:#818cf8;margin-bottom:8px">📴 Chế Độ Offline</h3>
-  <p>1. Bấm <b>Chơi Offline</b> → nhập số người chơi</p>
-  <p>2. Từng người nhập tên → <b>Bắt đầu</b></p>
-  <p>3. Chạm thẻ để xem vai trò → <b>Đã xong</b> → chuyền máy</p>
-  <p>4. Sau khi tất cả xem thẻ → vào <b>Vote</b></p>
-  <p>5. Bấm tên để loại → xem kết quả → tiếp tục vote</p>
-  <p>6. <b>Dân làng</b> thắng khi loại hết Gián điệp</p>
-  <p>7. <b>Gián điệp</b> thắng khi Dân còn ≤ 40%</p>
-  <p>8. <b>Mũ Trắng</b> bị loại → được đoán từ → đúng = thắng</p>
+  <h3 style="color:#818cf8;margin-bottom:8px">🎯 Mục tiêu</h3>
+  <p>👤 <b>Dân làng</b> — Biết từ khóa chính xác. Thắng khi loại hết Gián điệp + Mũ Trắng.</p>
+  <p>🕵️ <b>Gián điệp</b> — Biết từ gần giống. Thắng khi Dân làng còn ≤ 40%.</p>
+  <p>🎩 <b>Mũ Trắng</b> (phe thứ 3) — Chỉ biết gợi ý. Bị vote → có 20s đoán từ. Đúng = thắng luôn!</p>
  </div>
  <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:#818cf8;margin-bottom:8px">🌐 Chế Độ Online</h3>
-  <p>1. <b>Tạo Phòng</b> → nhập tên → chia sẻ mã phòng</p>
-  <p>2. Người khác <b>Vào phòng</b> bằng mã</p>
-  <p>3. Chủ phòng chỉnh số Gián điệp / Mũ Trắng</p>
-  <p>4. <b>Bắt đầu</b> → mỗi người xem thẻ trên máy riêng</p>
-  <p>5. Sau 3 phút nói chuyện → <b>Vote</b></p>
-  <p>6. Người nhiều phiếu nhất bị loại</p>
-  <p>7. Lặp lại cho đến khi có đội thắng</p>
-  <p>8. Chủ phòng bấm <b>Chơi tiếp</b> để đấu ván mới</p>
+  <h3 style="color:#818cf8;margin-bottom:8px">📴 Chế Độ Offline (1 máy)</h3>
+  <p>1. Bấm <b>Chơi Offline</b> → nhập số người → từng người nhập tên</p>
+  <p>2. Tới lượt ai, màn hình hiện tên to phía trên → <b>chạm thẻ</b> để xem vai trò</p>
+  <p>3. Xem xong bấm <b>Đã xong</b> → chuyền máy cho người kế</p>
+  <p>4. Tất cả xem xong → vào <b>Vote</b> (không qua chat/timer)</p>
+  <p>5. Bấm tên để loại → xem kết quả → <b>Tiếp tục</b> vote đến khi có đội thắng</p>
+  <p>6. <b>Mũ Trắng</b> bị vote → màn đoán 20s hiện ra → nhập từ → đúng = thắng, sai = bị loại</p>
+  <p>7. Chủ phòng có nút ⚙️ để chỉnh số Gián điệp/Mũ Trắng, áp dụng ván sau</p>
+ </div>
+ <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
+  <h3 style="color:#818cf8;margin-bottom:8px">🌐 Chế Độ Online (nhiều máy)</h3>
+  <p>1. <b>Tạo Phòng</b> → nhập tên → chia sẻ mã phòng cho bạn</p>
+  <p>2. Người khác <b>Vào phòng</b> bằng mã, nhập tên</p>
+  <p>3. Chủ phòng chỉnh số Gián điệp / Mũ Trắng qua ⚙️</p>
+  <p>4. <b>Bắt đầu</b> → mỗi người chạm thẻ xem vai trò trên máy riêng</p>
+  <p>5. 3 phút nói chuyện → <b>Bỏ phiếu</b> loại người nhiều phiếu nhất</p>
+  <p>6. <b>Mũ Trắng</b> bị vote → tự động màn đoán 20s</p>
+  <p>7. Chủ phòng bấm <b>Chơi tiếp</b> để đấu ván mới, giữ nguyên danh sách</p>
+  <p>8. Lỡ load lại trang? Tự động rejoin phòng nếu game chưa kết thúc!</p>
  </div>
  <div class="glass" style="margin:8px 0 20px;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:#818cf8;margin-bottom:8px">🎭 Vai trò</h3>
-  <p>👤 <b>Dân làng</b> — Biết từ khóa chính xác</p>
-  <p>🕵️ <b>Gián điệp</b> — Biết từ na ná (không phải từ thật)</p>
-  <p>🎩 <b>Mũ Trắng</b> — Chỉ biết gợi ý, phải đoán từ</p>
+  <h3 style="color:#818cf8;margin-bottom:8px">⭐ Từ khóa</h3>
+  <p>51 cặp từ toàn người nổi tiếng: Sơn Tùng, MCK, Messi, Ronaldo, Taylor Swift, Blackpink, BTS, Trấn Thành, Đen Vâu, Elon Musk...</p>
+  <p>Dân làng biết tên đúng, Gián điệp biết tên gần giống, Mũ Trắng chỉ biết nghề nghiệp/lĩnh vực.</p>
  </div>
  <button class="btn sec" onclick="hien('s0')" style="margin:0 0 20px">← Quay lại</button>
 </div>
