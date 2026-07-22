@@ -1398,17 +1398,10 @@ function xuLyDoan(){
       if(left <= 5) document.getElementById('guessTimer').style.color = '#f87171';
       if(left <= 0) {
         clearInterval(guessTimerInterval); guessTimerInterval = null;
-        // Time's up — auto eliminate
+        // Time's up — auto eliminate, game continues
         var g2 = gs;
-        g2.lastEliminated = g2.guessPlayer;
-        g2.lastRole = 'white_hat';
-        g2.status = 'result';
-        g2._whiteHatGuessed = true;
-        xuLyKetQua();
-        setTimeout(function(){
-          if(isOffline) { var rd=(g2.round||1)+1; ghi({status:'voting',phase:'vote_round',round:rd,votes:{}}); }
-          else { var rd=(g2.round||1)+1; ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd}); }
-        }, 1500);
+        if(isOffline) { var rd=(g2.round||1)+1; ghi({status:'voting',phase:'vote_round',round:rd,votes:{}}); }
+        else { var rd=(g2.round||1)+1; ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd}); }
       }
     }, 1000);
   }
@@ -1424,22 +1417,14 @@ function guiDoan(){
   if(match) {
     ghi({status:'gameover',winner:'white_hat'});
   } else {
-    // Mũ Trắng đoán sai → bị loại, hiện kết quả rồi tiếp tục
-    gs.lastEliminated = g.guessPlayer;
-    gs.lastRole = 'white_hat';
-    gs.status = 'result';
-    gs._whiteHatGuessed = true;
-    xuLyKetQua();
-    // After result, go to next round
-    setTimeout(function(){
-      if(isOffline) {
-        var rd=(gs.round||1)+1;
-        ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
-      } else {
-        var rd=(gs.round||1)+1;
-        ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
-      }
-    }, 1500);
+    // Mũ Trắng đoán sai → bị loại, game tiếp tục ngay
+    if(isOffline) {
+      var rd=(gs.round||1)+1;
+      ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
+    } else {
+      var rd=(gs.round||1)+1;
+      ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+    }
   }
 }
 
