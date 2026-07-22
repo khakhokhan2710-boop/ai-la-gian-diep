@@ -851,6 +851,11 @@ function choiLai() {
 function xuLyPhase(){
   var g=gs;
   if(g.phase!=='draw_done') return;
+  if(isOffline) {
+    // Offline: skip chat/timer, go straight to vote
+    ghi({status:'voting',phase:'vote_round',round:1,votes:{}});
+    return;
+  }
   hien('s3');
   if(g.voteTime) {
     // Timer đã chạy - sync từ Firebase
