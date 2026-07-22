@@ -457,11 +457,11 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
 <div class="s tc" id="s6" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <div class="flex-1"></div>
- <h3>🎩 Mũ Trắng</h3>
- <p class="p">Đoán từ của dân làng!</p>
+ <h3>🎩 Mũ Trắng — Đoán từ!</h3>
+ <p class="p" style="font-size:13px;color:#f87171">Sai là bị loại ngay</p>
  <p style="color:#818cf8;font-size:16px;font-weight:600" id="goiYDoan">—</p>
- <input class="inp" id="doanInput" placeholder="Nhập từ đoán..." maxlength="30">
- <button class="btn pri" onclick="guiDoan()">Đoán</button>
+ <input class="inp" id="doanInput" placeholder="Nhập từ khóa chính xác..." maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guiDoan()">
+ <button class="btn pri" onclick="guiDoan()">🎯 Đoán</button>
  <div class="flex-1"></div>
 </div>
 
@@ -1350,8 +1350,11 @@ function xuLyKetQua(){
   if(role==='civilian'){el.textContent='👤 Người Dân';el.style.background='rgba(34,197,94,0.1)';el.style.color='#22c55e';el.style.border='1px solid rgba(34,197,94,0.2)'}
   else if(role==='spy'){el.textContent='🕵️ Gián Điệp';el.style.background='rgba(239,68,68,0.1)';el.style.color='#ef4444';el.style.border='1px solid rgba(239,68,68,0.2)'}
   else{el.textContent='🎩 Mũ Trắng';el.style.background='rgba(129,140,248,0.1)';el.style.color='#818cf8';el.style.border='1px solid rgba(129,140,248,0.2)'}
-  if(role==='white_hat'){document.getElementById('tiepBtn').style.display='none';document.getElementById('tiepBtn2').style.display='none';
-    setTimeout(function(){ghi({status:'guess',guessPlayer:pid})},800)}
+  if(role==='white_hat'){
+    document.getElementById('tiepBtn').style.display='none';document.getElementById('tiepBtn2').style.display='none';
+    // Show guess screen immediately (only if not already guessed)
+    if(g.status!=='result') { ghi({status:'guess',guessPlayer:pid}); return; }
+  }
   else{document.getElementById('tiepBtn').style.display='block';document.getElementById('tiepBtn').textContent='Tiếp tục'}
   hien('s5');
 }
@@ -1386,14 +1389,21 @@ function guiDoan(){
   if(match) {
     ghi({status:'gameover',winner:'white_hat'});
   } else {
-    // Mũ Trắng đoán sai → bị loại, game tiếp tục
-    if(isOffline) {
-      var rd=(g.round||1)+1;
-      ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
-    } else {
-      var rd=(g.round||1)+1;
-      ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
-    }
+    // Mũ Trắng đoán sai → bị loại, hiện kết quả rồi tiếp tục
+    gs.lastEliminated = g.guessPlayer;
+    gs.lastRole = 'white_hat';
+    gs.status = 'result';
+    xuLyKetQua();
+    // After result, go to next round
+    setTimeout(function(){
+      if(isOffline) {
+        var rd=(gs.round||1)+1;
+        ghi({status:'voting',phase:'vote_round',round:rd,votes:{}});
+      } else {
+        var rd=(gs.round||1)+1;
+        ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd});
+      }
+    }, 1500);
   }
 }
 
