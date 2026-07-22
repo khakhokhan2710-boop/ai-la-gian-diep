@@ -872,15 +872,16 @@ function choiLai() {
     gs.votes = {};
     gs.currentTurn = -1;
     gs.pair = capNN();
+    chuanBiXong = false;
     batDauVe();
   } else if(roomRef && chuPhong) {
     // Online: reset game state on Firebase, keep players
     roomRef.update({
       round: 0, cardsSeen: {}, eliminated: {}, votes: {},
-      currentTurn: -1, pair: capNN(), status: 'drawing',
-      phase: 'join'
+      currentTurn: -1, pair: capNN(), status: 'setup',
+      phase: 'join', assignments: null
     }).then(function() {
-      batDauVe();
+      // Everyone sees setup screen again, host adjusts then clicks Bắt đầu
     }).catch(function(e) { alert('Lỗi: ' + e.message); });
   }
 }
