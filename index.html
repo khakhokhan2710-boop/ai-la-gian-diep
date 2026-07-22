@@ -1363,11 +1363,11 @@ function xuLyKetQua(){
 }
 function tiepTheo(){
   var g=gs,a=g.assignments||{},al=conSong(g);
-  var sp=0,cv=0,ic=0;
+  var sp=0,cv=0,ic=0,wh=0;
   for(var p in a){if(a[p].role==='civilian')ic++}
-  for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++}
+  for(var i=0;i<al.length;i++){var r=a[al[i]]&&a[al[i]].role;if(r==='spy')sp++;if(r==='civilian')cv++;if(r==='white_hat')wh++}
   if(sp>0&&cv<=Math.floor(ic*0.4)){ghi({status:'gameover',winner:'spy'});return}
-  if(sp===0){ghi({status:'gameover',winner:'civilian'});return}
+  if(sp===0&&wh===0){ghi({status:'gameover',winner:'civilian'});return}
   if(isOffline){
     // Offline: continue voting immediately, one elimination per round
     var rd=(g.round||1)+1;
