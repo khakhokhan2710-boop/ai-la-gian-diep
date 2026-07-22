@@ -737,6 +737,11 @@ function capNhatGame() {
     if(chuPhong){capNhatUI();if(!chuanBiXong){hien('s1');chuanBiXong=true}}
     else{hien('s3');document.getElementById('waitTitle').textContent='⏳ Đợi chủ phòng...'}
   }
+  else if(g.status==='naming'){
+    hien('s3');document.getElementById('waitTitle').textContent='🎲 Đang chia vai...';
+    document.getElementById('waitSub').textContent='Chờ chút...';
+    document.getElementById('waitBtn').style.display='none';
+  }
   else if(g.status==='drawing') xuLyRutBai();
   else if(g.status==='phase') xuLyPhase();
   else if(g.status==='voting') xuLyVote();
@@ -936,13 +941,12 @@ function choiLai() {
     chuanBiXong = false;
     batDauVe();
   } else if(roomRef && chuPhong) {
-    // Online: reset game state on Firebase, keep players
+    // Online: reset game state on Firebase, keep players, start new game directly
     roomRef.update({
       round: 0, cardsSeen: {}, eliminated: {}, votes: {},
-      currentTurn: -1, pair: capNN(), status: 'setup',
-      phase: 'join', assignments: null
+      currentTurn: -1, pair: capNN(), phase: 'join'
     }).then(function() {
-      // Everyone sees setup screen again, host adjusts then clicks Bắt đầu
+      batDauVe();
     }).catch(function(e) { alert('Lỗi: ' + e.message); });
   }
 }
