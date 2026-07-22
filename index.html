@@ -458,10 +458,11 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <div class="flex-1"></div>
  <h3>🎩 Mũ Trắng — Đoán từ!</h3>
- <p class="p" style="font-size:13px;color:#f87171">Sai là bị loại ngay</p>
+ <p class="p" style="font-size:13px;color:#f87171">Sai hoặc hết giờ là bị loại ngay</p>
  <p style="color:#818cf8;font-size:16px;font-weight:600" id="goiYDoan">—</p>
+ <div id="guessTimer" style="font-size:36px;font-weight:900;color:#f87171;margin:8px 0">⏱ 20</div>
  <input class="inp" id="doanInput" placeholder="Nhập từ khóa chính xác..." maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guiDoan()">
- <button class="btn pri" onclick="guiDoan()">🎯 Đoán</button>
+ <button class="btn pri" onclick="guiDoan()" id="guessBtn">🎯 Đoán</button>
  <div class="flex-1"></div>
 </div>
 
@@ -576,6 +577,7 @@ var s9Names = [];
 var s9Players = {};
 var pendingSpies = null; // Settings changes for next game only
 var pendingHats = null;
+var guessTimerInterval = null;
 
 function doc() {
   if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
@@ -1037,6 +1039,7 @@ function daXong(e){e.stopPropagation();
 }
 
 function choiLai() {
+  if(guessTimerInterval) { clearInterval(guessTimerInterval); guessTimerInterval = null; }
   // Apply pending settings for next game
   if(pendingSpies!=null) { gs.spies = pendingSpies; }
   if(pendingHats!=null) { gs.whiteHats = pendingHats; }
@@ -1378,12 +1381,43 @@ function tiepTheo(){
 
 function xuLyDoan(){
   var g=gs;
-  if(isOffline || g.guessPlayer===myId){document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';hien('s6')}
+  if(isOffline || g.guessPlayer===myId){
+    document.getElementById('goiYDoan').textContent=g.pair?g.pair[2]:'—';
+    document.getElementById('doanInput').value='';
+    document.getElementById('guessBtn').disabled=false;
+    document.getElementById('guessTimer').style.display='block';
+    hien('s6');
+    document.getElementById('doanInput').focus();
+    // Start 20s countdown
+    if(guessTimerInterval) clearInterval(guessTimerInterval);
+    var left = 20;
+    document.getElementById('guessTimer').textContent = '⏱ '+left;
+    guessTimerInterval = setInterval(function(){
+      left--;
+      document.getElementById('guessTimer').textContent = '⏱ '+left;
+      if(left <= 5) document.getElementById('guessTimer').style.color = '#f87171';
+      if(left <= 0) {
+        clearInterval(guessTimerInterval); guessTimerInterval = null;
+        // Time's up — auto eliminate
+        var g2 = gs;
+        g2.lastEliminated = g2.guessPlayer;
+        g2.lastRole = 'white_hat';
+        g2.status = 'result';
+        xuLyKetQua();
+        setTimeout(function(){
+          if(isOffline) { var rd=(g2.round||1)+1; ghi({status:'voting',phase:'vote_round',round:rd,votes:{}}); }
+          else { var rd=(g2.round||1)+1; ghi({phase:'draw_done',voteTime:Date.now()+180000,round:rd}); }
+        }, 1500);
+      }
+    }, 1000);
+  }
   else{hien('s3');document.getElementById('waitTitle').textContent='🎩 Mũ Trắng đang đoán...';document.getElementById('waitBtn').style.display='none'}
 }
 function guiDoan(){
   var g=gs,gus=document.getElementById('doanInput').value.trim().toLowerCase();
   if(!gus){alert('Nhập từ!');return}
+  if(guessTimerInterval) { clearInterval(guessTimerInterval); guessTimerInterval = null; }
+  document.getElementById('guessBtn').disabled = true;
   var cw=(g.pair?g.pair[0]:'').toLowerCase();
   var match = (gus === cw);
   if(match) {
@@ -1436,6 +1470,7 @@ function roiPhong(){
   roomRef=null;myId=null;chuPhong=false;chuanBiXong=false;binhChon=null;gs={};
   localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName');
   pendingSpies = null; pendingHats = null;
+  if(guessTimerInterval) { clearInterval(guessTimerInterval); guessTimerInterval = null; }
   document.getElementById('nameInput').value='';document.getElementById('maPhongInput').value='';
   document.getElementById('doanInput').value='';
   hien('s0');
