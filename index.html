@@ -524,17 +524,17 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
   <div class="settings-row">
    <span>🕵️ Gián điệp</span>
    <span>
-    <button class="adj2" onclick="adjSpy(-1)">−</button>
+    <button class="adj2" onclick="adjPendingSpy(-1)">−</button>
     <span id="setSpy" style="font-weight:800;color:#f87171;margin:0 8px">-</span>
-    <button class="adj2" onclick="adjSpy(1)">+</button>
+    <button class="adj2" onclick="adjPendingSpy(1)">+</button>
    </span>
   </div>
   <div class="settings-row">
    <span>🎩 Mũ trắng</span>
    <span>
-    <button class="adj2" onclick="adjHat(-1)">−</button>
+    <button class="adj2" onclick="adjPendingHat(-1)">−</button>
     <span id="setHat" style="font-weight:800;color:#a78bfa;margin:0 8px">-</span>
-    <button class="adj2" onclick="adjHat(1)">+</button>
+    <button class="adj2" onclick="adjPendingHat(1)">+</button>
    </span>
   </div>
   <div style="text-align:center;margin-top:16px">
@@ -574,6 +574,8 @@ var s9Step = 0; // 0=ask count, 1+=ask name for each
 var s9Total = 0;
 var s9Names = [];
 var s9Players = {};
+var pendingSpies = null; // Settings changes for next game only
+var pendingHats = null;
 
 function doc() {
   if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
@@ -719,15 +721,37 @@ function esc(s){return (s||'').replace(/[&<>]/g,'')}
 
 function openSettings() {
   if(!chuPhong) return;
-  var pl=demKh(gs.players||{}), sp=gs.spies||0, wh=gs.whiteHats||0;
+  var pl=demKh(gs.players||{}), sp=pendingSpies!=null?pendingSpies:(gs.spies||0), wh=pendingHats!=null?pendingHats:(gs.whiteHats||0);
   document.getElementById('setDan').textContent = pl - sp - wh;
   document.getElementById('setSpy').textContent = sp;
   document.getElementById('setHat').textContent = wh;
+  // Init pending from current if not set
+  if(pendingSpies==null) pendingSpies = gs.spies||0;
+  if(pendingHats==null) pendingHats = gs.whiteHats||0;
   document.getElementById('settingsModal').classList.add('show');
 }
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('show');
   if(chuPhong&&!isOffline) capNhatUI();
+}
+
+function adjPendingSpy(d) {
+  if(pendingSpies==null) pendingSpies = gs.spies||0;
+  var n = pendingSpies + d, pl = demKh(gs.players||{});
+  var wh = pendingHats!=null ? pendingHats : (gs.whiteHats||0);
+  if(n<0)n=0; var m=pl-wh-1; if(n>m)n=m;
+  pendingSpies = n;
+  document.getElementById('setSpy').textContent = n;
+  document.getElementById('setDan').textContent = pl - n - wh;
+}
+function adjPendingHat(d) {
+  if(pendingHats==null) pendingHats = gs.whiteHats||0;
+  var n = pendingHats + d, pl = demKh(gs.players||{});
+  var sp = pendingSpies!=null ? pendingSpies : (gs.spies||0);
+  if(n<0)n=0; var m=pl-sp-1; if(n>m)n=m;
+  pendingHats = n;
+  document.getElementById('setHat').textContent = n;
+  document.getElementById('setDan').textContent = pl - sp - n;
 }
 
 function taoPhong() {
@@ -890,6 +914,10 @@ function adjHat(d) {
 
 function batDau() {
   if(!chuPhong||!gs) return;
+  // Apply pending settings if any
+  if(pendingSpies!=null) { gs.spies = pendingSpies; }
+  if(pendingHats!=null) { gs.whiteHats = pendingHats; }
+  pendingSpies = null; pendingHats = null;
   var g = gs;
   if((g.spies||0)+(g.whiteHats||0)>=(demKh(g.players||{}))){alert('Quá nhiều gián điệp/mũ trắng!');return}
   if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
@@ -898,7 +926,7 @@ function batDau() {
     // Use the player list set up in UI
     batDauVe(); return;
   }
-  ghi({status:'naming',phase:'join'}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
+  ghi({status:'naming',phase:'join',spies:gs.spies,whiteHats:gs.whiteHats}).then(function(){setTimeout(batDauVe,500)}).catch(function(e){alert('Lỗi:'+e.message)});
 }
 
 function batDauVe() {
@@ -1009,6 +1037,10 @@ function daXong(e){e.stopPropagation();
 }
 
 function choiLai() {
+  // Apply pending settings for next game
+  if(pendingSpies!=null) { gs.spies = pendingSpies; }
+  if(pendingHats!=null) { gs.whiteHats = pendingHats; }
+  pendingSpies = null; pendingHats = null;
   if(isOffline) {
     // Keep player names, re-roll roles
     gs.round = 0;
@@ -1023,7 +1055,8 @@ function choiLai() {
     // Online: reset game state on Firebase, keep players, start new game directly
     roomRef.update({
       round: 0, cardsSeen: {}, eliminated: {}, votes: {},
-      currentTurn: -1, pair: capNN(), phase: 'join'
+      currentTurn: -1, pair: capNN(), phase: 'join',
+      spies: gs.spies, whiteHats: gs.whiteHats
     }).then(function() {
       batDauVe();
     }).catch(function(e) { alert('Lỗi: ' + e.message); });
@@ -1392,6 +1425,7 @@ function roiPhong(){
     else if(myId)roomRef.child('players/'+myId).remove().catch(function(){})}
   roomRef=null;myId=null;chuPhong=false;chuanBiXong=false;binhChon=null;gs={};
   localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName');
+  pendingSpies = null; pendingHats = null;
   document.getElementById('nameInput').value='';document.getElementById('maPhongInput').value='';
   document.getElementById('doanInput').value='';
   hien('s0');
