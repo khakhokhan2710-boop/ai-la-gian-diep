@@ -1398,7 +1398,10 @@ function xuLyDoan(){
       if(left <= 5) document.getElementById('guessTimer').style.color = '#f87171';
       if(left <= 0) {
         clearInterval(guessTimerInterval); guessTimerInterval = null;
+        if(left < 0) return; // Already handled
+        left = -999; // Mark as done
         // Time's up — offline: go straight to vote
+        document.getElementById('guessTimer').style.display='none';
         if(isOffline) {
           var g2=gs; g2.status='voting';g2.phase='vote_round';g2.round=(g2.round||1)+1;g2.votes={};
           hien('s4');xuLyVote();
@@ -1421,6 +1424,7 @@ function guiDoan(){
     ghi({status:'gameover',winner:'white_hat'});
   } else {
     // Mũ Trắng đoán sai → bị loại, vote tiếp luôn
+    document.getElementById('guessTimer').style.display='none';
     if(isOffline) {
       gs.status='voting';gs.phase='vote_round';gs.round=(gs.round||1)+1;gs.votes={};
       hien('s4');xuLyVote();
