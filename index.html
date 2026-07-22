@@ -1403,6 +1403,7 @@ function xuLyDoan(){
         g2.lastEliminated = g2.guessPlayer;
         g2.lastRole = 'white_hat';
         g2.status = 'result';
+        g2._whiteHatGuessed = true;
         xuLyKetQua();
         setTimeout(function(){
           if(isOffline) { var rd=(g2.round||1)+1; ghi({status:'voting',phase:'vote_round',round:rd,votes:{}}); }
