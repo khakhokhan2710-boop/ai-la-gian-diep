@@ -592,17 +592,23 @@ if(!deviceId) { deviceId = 'd' + Math.random().toString(36).substr(2,8) + Date.n
     doc().then(function(snap) {
       if(!snap.exists()) { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
       var g = snap.val();
-      if(g.status==='gameover') { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
-      // Find our player ID
+      if(g.status==='gameover'||g.status==='removed') { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
+      // Find our player ID by deviceId
       var pl = g.players||{};
       for(var k in pl) {
         if(pl[k].deviceId === deviceId) { myId = k; break; }
       }
-      if(!myId) { myId = randId(); ghiChild('players/'+myId, {name:savedName,deviceId:deviceId}); }
+      if(!myId) {
+        // Not in room yet — join if setup/naming
+        if(g.status==='setup'||g.status==='naming') {
+          myId = randId();
+          ghiChild('players/'+myId, {name:savedName,deviceId:deviceId});
+        } else { localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); return; }
+      }
       if(g.host === myId) chuPhong = true;
       gs = g; langNghe();
       capNhatGame();
-    });
+    }).catch(function(){ localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName'); });
   }
 })();
 
@@ -645,7 +651,7 @@ function vaoPhong() {
   doc().then(function(snap){
     if(!snap.exists()){alert('Không có phòng!');return}
     var g = snap.val();
-    if(g.status!=='setup'){alert('Game đã bắt đầu!');return}
+    if(g.status!=='setup'&&g.status!=='naming'){alert('Game đã bắt đầu!');return}
     var pl = g.players||{};
     for(var k in pl){if(pl[k].deviceId===deviceId){alert('Bạn đã trong phòng!');return}}
     if(demKh(pl) >= (g.total||8)){alert('Phòng đầy!');return}
