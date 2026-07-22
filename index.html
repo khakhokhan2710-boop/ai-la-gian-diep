@@ -920,6 +920,7 @@ function batDau() {
   if(pendingSpies!=null) { gs.spies = pendingSpies; }
   if(pendingHats!=null) { gs.whiteHats = pendingHats; }
   pendingSpies = null; pendingHats = null;
+  gs._whiteHatGuessed = false;
   var g = gs;
   if((g.spies||0)+(g.whiteHats||0)>=(demKh(g.players||{}))){alert('Quá nhiều gián điệp/mũ trắng!');return}
   if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
@@ -1355,8 +1356,9 @@ function xuLyKetQua(){
   else{el.textContent='🎩 Mũ Trắng';el.style.background='rgba(129,140,248,0.1)';el.style.color='#818cf8';el.style.border='1px solid rgba(129,140,248,0.2)'}
   if(role==='white_hat'){
     document.getElementById('tiepBtn').style.display='none';document.getElementById('tiepBtn2').style.display='none';
-    // Show guess screen immediately (only if not already guessed)
-    if(g.status!=='result') { ghi({status:'guess',guessPlayer:pid}); return; }
+    // Only show guess if not already showing result from guess failure
+    if(!g._whiteHatGuessed) { ghi({status:'guess',guessPlayer:pid}); return; }
+    g._whiteHatGuessed = false;
   }
   else{document.getElementById('tiepBtn').style.display='block';document.getElementById('tiepBtn').textContent='Tiếp tục'}
   hien('s5');
@@ -1427,6 +1429,7 @@ function guiDoan(){
     gs.lastEliminated = g.guessPlayer;
     gs.lastRole = 'white_hat';
     gs.status = 'result';
+    gs._whiteHatGuessed = true;
     xuLyKetQua();
     // After result, go to next round
     setTimeout(function(){
