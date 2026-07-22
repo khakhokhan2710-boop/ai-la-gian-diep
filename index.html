@@ -1298,7 +1298,6 @@ function xuLyVote(){
         g.lastRole = role;
         g.status = 'result';
         ghi({eliminated:g.eliminated,status:'result',lastEliminated:p2,lastRole:role});
-        xuLyKetQua();
         return;
       }
       if(v[myId]) return;
@@ -1343,7 +1342,6 @@ function tinhLoai(g){
     gs.lastRole = role;
     gs.status = 'result';
     gs.eliminated = elim;
-    xuLyKetQua();
   }).catch(function(err){alert('Lỗi: '+err.message)});
 }
 
