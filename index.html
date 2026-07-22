@@ -303,6 +303,7 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <button class="btn pri" onclick="hien('s8')" style="font-size:18px;padding:20px">🌐 Chế Độ Online</button>
  <div style="height:10px"></div>
  <button class="btn sec" onclick="taoPhongOffline()" style="font-size:16px;padding:16px">📴 Chơi Offline</button>
+ <button class="btn pri" onclick="hien('s10')" style="font-size:14px;padding:14px;margin-top:8px;background:rgba(255,255,255,0.04);color:#818cf8;border:1px solid rgba(99,102,241,0.15)">📖 Hướng dẫn</button>
  <div class="flex-1"></div>
 </div>
 
@@ -445,6 +446,41 @@ h1{font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;text-
  <button class="btn sec" onclick="roiPhong()">🏠 Về phòng chờ</button>
  <button class="btn sec" id="choiLaiBtn" style="display:none" onclick="choiLai()">🔄 Chơi lại</button>
 </div>
+</div>
+
+<!-- Help -->
+<div class="s" id="s10" style="position:relative;overflow-y:auto">
+ <button class="exit-btn" onclick="hien('s0')">✕</button>
+ <h2 style="text-align:center;margin:16px 0 4px">📖 Hướng dẫn</h2>
+ <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
+  <h3 style="color:#818cf8;margin-bottom:8px">📴 Chế Độ Offline</h3>
+  <p>1. Bấm <b>Chơi Offline</b> → nhập số người chơi</p>
+  <p>2. Từng người nhập tên → <b>Bắt đầu</b></p>
+  <p>3. Chạm thẻ để xem vai trò → <b>Đã xong</b> → chuyền máy</p>
+  <p>4. Sau khi tất cả xem thẻ → vào <b>Vote</b></p>
+  <p>5. Bấm tên để loại → xem kết quả → tiếp tục vote</p>
+  <p>6. <b>Dân làng</b> thắng khi loại hết Gián điệp</p>
+  <p>7. <b>Gián điệp</b> thắng khi Dân còn ≤ 40%</p>
+  <p>8. <b>Mũ Trắng</b> bị loại → được đoán từ → đúng = thắng</p>
+ </div>
+ <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
+  <h3 style="color:#818cf8;margin-bottom:8px">🌐 Chế Độ Online</h3>
+  <p>1. <b>Tạo Phòng</b> → nhập tên → chia sẻ mã phòng</p>
+  <p>2. Người khác <b>Vào phòng</b> bằng mã</p>
+  <p>3. Chủ phòng chỉnh số Gián điệp / Mũ Trắng</p>
+  <p>4. <b>Bắt đầu</b> → mỗi người xem thẻ trên máy riêng</p>
+  <p>5. Sau 3 phút nói chuyện → <b>Vote</b></p>
+  <p>6. Người nhiều phiếu nhất bị loại</p>
+  <p>7. Lặp lại cho đến khi có đội thắng</p>
+  <p>8. Chủ phòng bấm <b>Chơi tiếp</b> để đấu ván mới</p>
+ </div>
+ <div class="glass" style="margin:8px 0 20px;font-size:14px;line-height:1.7;color:#ccc">
+  <h3 style="color:#818cf8;margin-bottom:8px">🎭 Vai trò</h3>
+  <p>👤 <b>Dân làng</b> — Biết từ khóa chính xác</p>
+  <p>🕵️ <b>Gián điệp</b> — Biết từ na ná (không phải từ thật)</p>
+  <p>🎩 <b>Mũ Trắng</b> — Chỉ biết gợi ý, phải đoán từ</p>
+ </div>
+ <button class="btn sec" onclick="hien('s0')" style="margin:0 0 20px">← Quay lại</button>
 </div>
 
 <script>
