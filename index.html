@@ -1270,7 +1270,7 @@ function guiDoan(){
   var g=gs,gus=document.getElementById('doanInput').value.trim().toLowerCase();
   if(!gus){alert('Nhập từ!');return}
   var cw=(g.pair?g.pair[0]:'').toLowerCase();
-  var match=(gus.indexOf(cw)!==-1)||(cw.indexOf(gus)!==-1);
+  var match = (gus === cw);
   if(match) {
     ghi({status:'gameover',winner:'white_hat'});
   } else {
