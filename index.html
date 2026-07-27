@@ -1336,9 +1336,12 @@ function xuLyDoan(){
         clearInterval(guessTimerInterval); guessTimerInterval = null;
         if(left < 0) return; // Already handled
         left = -999; // Mark as done
-        // Time's up — offline: go straight to vote
+        // Time's up — check if civilians win, else go to vote
         document.getElementById('guessTimer').style.display='none';
-        if(isOffline) {
+        var a2=gs.assignments||{},al2=conSong(gs),sp2=0;
+        for(var i2=0;i2<al2.length;i2++){if(a2[al2[i2]]&&a2[al2[i2]].role==='spy')sp2++}
+        if(sp2===0){ ghi({status:'gameover',winner:'civilian'}); }
+        else if(isOffline) {
           var g2=gs; g2.status='voting';g2.phase='vote_round';g2.round=(g2.round||1)+1;g2.votes={};
           hien('s4');xuLyVote();
         } else {
@@ -1359,8 +1362,12 @@ function guiDoan(){
   if(match) {
     ghi({status:'gameover',winner:'white_hat'});
   } else {
-    // Mũ Trắng đoán sai → bị loại, vote tiếp luôn
+    // Mũ Trắng đoán sai → bị loại, kiểm tra xem còn gián điệp không
     document.getElementById('guessTimer').style.display='none';
+    // Check if civilians win (no more spies)
+    var a2=gs.assignments||{},al2=conSong(gs),sp2=0;
+    for(var i2=0;i2<al2.length;i2++){if(a2[al2[i2]]&&a2[al2[i2]].role==='spy')sp2++}
+    if(sp2===0){ ghi({status:'gameover',winner:'civilian'}); return; }
     if(isOffline) {
       gs.status='voting';gs.phase='vote_round';gs.round=(gs.round||1)+1;gs.votes={};
       hien('s4');xuLyVote();
