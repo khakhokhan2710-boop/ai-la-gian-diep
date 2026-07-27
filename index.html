@@ -269,6 +269,12 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
   <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">1</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
   <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">0</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
  </div>
+ <div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+  <span style="font-size:13px;color:#999">🙈 Ẩn vai trò (không ai biết mình là ai)</span>
+  <button id="blindToggle" class="adj2" onclick="toggleBlind()" style="width:44px;height:28px;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);position:relative;font-size:0;transition:all 0.3s">
+   <span id="blindKnob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#777;transition:all 0.3s"></span>
+  </button>
+ </div>
  <div class="flex-1" style="flex:0;min-height:10px"></div>
  <button class="btn pri" onclick="batDau()">🚀 Bắt đầu</button>
  <button class="btn sec" onclick="roiPhong()">🚪 Rời phòng</button>
@@ -468,9 +474,10 @@ var s9Step = 0; // 0=ask count, 1+=ask name for each
 var s9Total = 0;
 var s9Names = [];
 var s9Players = {};
-var pendingSpies = null; // Settings changes for next game only
+var pendingSpies = null;
 var pendingHats = null;
 var guessTimerInterval = null;
+var blindMode = false;
 
 function doc() {
   if(isOffline || !roomRef) return new Promise(function(r){r({exists:function(){return true},val:function(){return gs}})});
@@ -628,6 +635,19 @@ function openSettings() {
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('show');
   if(chuPhong&&!isOffline) capNhatUI();
+}
+
+function toggleBlind() {
+  blindMode = !blindMode;
+  var tog = document.getElementById('blindToggle');
+  var knob = document.getElementById('blindKnob');
+  if(blindMode) {
+    tog.style.background = '#818cf8'; tog.style.borderColor = '#818cf8';
+    knob.style.left = '19px'; knob.style.background = '#fff';
+  } else {
+    tog.style.background = 'rgba(255,255,255,0.08)'; tog.style.borderColor = 'rgba(255,255,255,0.12)';
+    knob.style.left = '3px'; knob.style.background = '#777';
+  }
 }
 
 function adjPendingSpy(d) {
@@ -892,11 +912,18 @@ function xuLyRutBai() {
 function latBai(){
   if(!currentCardPlayer) return;
   var cp = currentCardPlayer, a = cp.a;
-  document.getElementById('vaiLabel').textContent = 'Vai trò';
-  var vt = document.getElementById('vaiText');
-  if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
-  else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
-  else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
+  if(blindMode && a.role !== 'white_hat') {
+    // Blind mode: hide role, only White Hat sees their role
+    document.getElementById('vaiLabel').textContent = 'Vai trò';
+    document.getElementById('vaiText').textContent = '???';
+    document.getElementById('vaiText').className = 'rn';
+  } else {
+    document.getElementById('vaiLabel').textContent = 'Vai trò';
+    var vt = document.getElementById('vaiText');
+    if(a.role==='civilian'){vt.textContent='Người Dân';vt.className='rn civ'}
+    else if(a.role==='spy'){vt.textContent='Gián Điệp';vt.className='rn spy'}
+    else{vt.textContent='Mũ Trắng';vt.className='rn wht'}
+  }
   var tw = document.getElementById('tuText');
   if(a.word){tw.style.display='block';tw.textContent=a.word}
   else tw.style.display='none';
