@@ -648,6 +648,9 @@ function toggleBlind() {
     tog.style.background = 'rgba(255,255,255,0.08)'; tog.style.borderColor = 'rgba(255,255,255,0.12)';
     knob.style.left = '3px'; knob.style.background = '#777';
   }
+  // Sync to gs for online
+  gs.blindMode = blindMode;
+  if(!isOffline&&roomRef) roomRef.child('blindMode').set(blindMode);
 }
 
 function adjPendingSpy(d) {
@@ -741,10 +744,22 @@ function capNhatUI() {
   for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+' <span onclick="xoaNguoi(\''+k+'\')" style="cursor:pointer;color:#f87171;font-weight:700;margin-left:4px">✕</span></span>');
   document.getElementById('playerListSetup').innerHTML = arr.join('')||'<span style="color:#444;font-size:13px">Chưa có ai</span>';
   if(isOffline) document.getElementById('themNguoiBtn').style.display = 'block';
+  // Restore blind toggle state
+  var tog2 = document.getElementById('blindToggle');
+  var knob2 = document.getElementById('blindKnob');
+  if(blindMode) {
+    tog2.style.background = '#818cf8'; tog2.style.borderColor = '#818cf8';
+    knob2.style.left = '19px'; knob2.style.background = '#fff';
+  } else {
+    tog2.style.background = 'rgba(255,255,255,0.08)'; tog2.style.borderColor = 'rgba(255,255,255,0.12)';
+    knob2.style.left = '3px'; knob2.style.background = '#777';
+  }
 }
 
 function capNhatGame() {
   var g = gs; if(!g) return;
+  // Sync blind mode from Firebase / gs
+  if(g.blindMode !== undefined) blindMode = g.blindMode;
   // Toggle gear buttons for host only
   var gears = document.querySelectorAll('.gear-btn');
   for(var i=0;i<gears.length;i++) {
@@ -912,7 +927,8 @@ function xuLyRutBai() {
 function latBai(){
   if(!currentCardPlayer) return;
   var cp = currentCardPlayer, a = cp.a;
-  if(blindMode && a.role !== 'white_hat') {
+  var isBlind = gs.blindMode || blindMode;
+  if(isBlind && a.role !== 'white_hat') {
     // Blind mode: hide role, only White Hat sees their role
     document.getElementById('vaiLabel').textContent = 'Vai trò';
     document.getElementById('vaiText').textContent = '???';
