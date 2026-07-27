@@ -269,12 +269,7 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
   <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">1</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
   <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">0</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
  </div>
- <div style="display:flex;align-items:center;gap:10px;margin:8px 0">
-  <span style="font-size:13px;color:#999">🙈 Ẩn vai trò (không ai biết mình là ai)</span>
-  <button id="blindToggle" class="adj2" onclick="toggleBlind()" style="width:44px;height:28px;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);position:relative;font-size:0;transition:all 0.3s">
-   <span id="blindKnob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#777;transition:all 0.3s"></span>
-  </button>
- </div>
+ <button class="btn sec" id="blindBtn" onclick="toggleBlind()" style="width:100%;padding:14px;margin:6px 0;font-size:15px;text-align:center">🙈 Ẩn vai trò: TẮT</button>
  <div class="flex-1" style="flex:0;min-height:10px"></div>
  <button class="btn pri" onclick="batDau()">🚀 Bắt đầu</button>
  <button class="btn sec" onclick="roiPhong()">🚪 Rời phòng</button>
@@ -639,14 +634,17 @@ function closeSettings() {
 
 function toggleBlind() {
   blindMode = !blindMode;
-  var tog = document.getElementById('blindToggle');
-  var knob = document.getElementById('blindKnob');
+  var btn = document.getElementById('blindBtn');
   if(blindMode) {
-    tog.style.background = '#818cf8'; tog.style.borderColor = '#818cf8';
-    knob.style.left = '19px'; knob.style.background = '#fff';
+    btn.textContent = '🙈 Ẩn vai trò: BẬT';
+    btn.style.background = 'rgba(99,102,241,0.2)';
+    btn.style.borderColor = 'rgba(99,102,241,0.4)';
+    btn.style.color = '#c4b5fd';
   } else {
-    tog.style.background = 'rgba(255,255,255,0.08)'; tog.style.borderColor = 'rgba(255,255,255,0.12)';
-    knob.style.left = '3px'; knob.style.background = '#777';
+    btn.textContent = '🙈 Ẩn vai trò: TẮT';
+    btn.style.background = 'rgba(255,255,255,0.05)';
+    btn.style.borderColor = 'rgba(255,255,255,0.08)';
+    btn.style.color = '#aaa';
   }
   // Sync to gs for online
   gs.blindMode = blindMode;
@@ -744,15 +742,18 @@ function capNhatUI() {
   for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+' <span onclick="xoaNguoi(\''+k+'\')" style="cursor:pointer;color:#f87171;font-weight:700;margin-left:4px">✕</span></span>');
   document.getElementById('playerListSetup').innerHTML = arr.join('')||'<span style="color:#444;font-size:13px">Chưa có ai</span>';
   if(isOffline) document.getElementById('themNguoiBtn').style.display = 'block';
-  // Restore blind toggle state
-  var tog2 = document.getElementById('blindToggle');
-  var knob2 = document.getElementById('blindKnob');
+  // Restore blind button state
+  var bb = document.getElementById('blindBtn');
   if(blindMode) {
-    tog2.style.background = '#818cf8'; tog2.style.borderColor = '#818cf8';
-    knob2.style.left = '19px'; knob2.style.background = '#fff';
+    bb.textContent = '🙈 Ẩn vai trò: BẬT';
+    bb.style.background = 'rgba(99,102,241,0.2)';
+    bb.style.borderColor = 'rgba(99,102,241,0.4)';
+    bb.style.color = '#c4b5fd';
   } else {
-    tog2.style.background = 'rgba(255,255,255,0.08)'; tog2.style.borderColor = 'rgba(255,255,255,0.12)';
-    knob2.style.left = '3px'; knob2.style.background = '#777';
+    bb.textContent = '🙈 Ẩn vai trò: TẮT';
+    bb.style.background = 'rgba(255,255,255,0.05)';
+    bb.style.borderColor = 'rgba(255,255,255,0.08)';
+    bb.style.color = '#aaa';
   }
 }
 
