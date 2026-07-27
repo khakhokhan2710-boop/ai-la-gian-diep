@@ -3,175 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AI LÀ GIÁN ĐIỆP</title>
+<title>Gián Điệp</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--purple:#818cf8;--purple2:#a78bfa;--purple3:#6366f1;--dark:#050510;--glass:rgba(18,18,35,0.85)}
+*{margin:0;padding:0;box-sizing:border-box}
+
 body{
-  font-family:'Segoe UI',-apple-system,sans-serif;background:var(--dark);color:#eee;
-  min-height:100vh;overflow-x:hidden;cursor:default;
+  font-family:-apple-system,sans-serif;background:#050510;color:#eee;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow-x:hidden;
   background:url('bg.jpg') center/cover no-repeat fixed;
 }
 body::before{
-  content:'';position:fixed;inset:0;z-index:0;
-  background:radial-gradient(ellipse at 50% 30%,rgba(99,102,241,0.15) 0%,transparent 60%),
-             linear-gradient(180deg,rgba(5,5,20,0.3) 0%,rgba(5,5,20,0.85) 70%,#030310 100%);
+  content:'';position:fixed;inset:0;
+  background:linear-gradient(180deg,rgba(5,5,20,0.6) 0%,rgba(5,5,20,0.88) 50%,#030310 100%);
+  z-index:0;
 }
-body::after{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 100%,rgba(99,102,241,0.08) 0%,transparent 70%)}
 
-#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
-
-.app{position:relative;z-index:1;width:100%;max-width:440px;margin:0 auto;padding:20px 16px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.app{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;padding:16px 14px;
+  height:100vh;height:100dvh;display:flex;flex-direction:column;
+}
 
 .s{display:none;flex-direction:column;flex:1;min-height:0}
-.s.a{display:flex;animation:fadeIn 0.4s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.s.a{display:flex;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* Hero */
-.hero-logo{font-size:clamp(28px,6vw,42px);font-weight:900;text-align:center;
-  background:linear-gradient(135deg,var(--purple2),var(--purple),var(--purple3));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  filter:drop-shadow(0 0 30px rgba(129,140,248,0.5));
-  animation:breath 3s ease-in-out infinite;margin-bottom:4px;
-}
-@keyframes breath{0%,100%{filter:drop-shadow(0 0 30px rgba(129,140,248,0.5))}50%{filter:drop-shadow(0 0 50px rgba(129,140,248,0.8))}}
-.hero-sub{font-size:14px;color:#999;text-align:center;margin-bottom:40px;letter-spacing:0.05em}
-
-/* Buttons */
-.game-btn{
-  width:100%;padding:18px 24px;border-radius:16px;border:1px solid rgba(129,140,248,0.25);
-  background:var(--glass);color:#ccc;font-size:17px;font-weight:700;cursor:pointer;
-  margin-bottom:12px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
-  position:relative;overflow:hidden;text-align:center;font-family:inherit;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-}
-.game-btn::before{
-  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
-  transition:left 0.6s;
-}
-.game-btn:hover::before{left:100%}
-.game-btn:hover{transform:translateY(-2px);border-color:var(--purple);color:#fff;
-  box-shadow:0 8px 32px rgba(99,102,241,0.25),0 0 20px rgba(99,102,241,0.1)}
-.game-btn:active{transform:scale(0.97)}
-.game-btn.pri{
-  background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2));
-  border-color:rgba(129,140,248,0.5);color:#fff;font-size:20px;padding:22px;
-  box-shadow:0 4px 30px rgba(99,102,241,0.3);
-}
-.game-btn.pri:hover{box-shadow:0 8px 40px rgba(99,102,241,0.4);background:linear-gradient(135deg,rgba(99,102,241,0.4),rgba(139,92,246,0.3))}
-.btn-icon{font-size:24px;margin-right:8px;display:inline-block;transition:transform 0.3s}
-.game-btn:hover .btn-icon{animation:iconShake 0.5s ease}
-@keyframes iconShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}75%{transform:rotate(-5deg)}}
-
-/* Neon line divider */
-.neon-line{height:1px;background:linear-gradient(90deg,transparent,rgba(129,140,248,0.3),transparent);margin:24px 0;position:relative}
-.neon-line::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:2px;background:var(--purple);box-shadow:0 0 10px var(--purple),0 0 20px var(--purple)}
-
-/* Glass card */
 .glass{
-  background:var(--glass);border:1px solid rgba(255,255,255,0.08);
+  background:rgba(18,18,35,0.82);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:18px;padding:24px 20px;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   box-shadow:0 8px 40px rgba(0,0,0,0.5);
 }
 
-/* Common game styles */
-h1{font-size:30px;font-weight:900;color:#f0f0f0}
+h1{font-size:30px;font-weight:900;margin-bottom:4px;color:#f0f0f0}
 h2{font-size:22px;font-weight:800;color:#e0e0e0}
 .p{color:#999;font-size:13px;margin-bottom:14px}
+
 .inp{
-  width:100%;padding:15px;border-radius:12px;background:rgba(255,255,255,0.08);color:#fff;
+  width:100%;padding:15px;border-radius:12px;
+  background:rgba(255,255,255,0.08);color:#fff;
   border:1px solid rgba(255,255,255,0.12);font-size:16px;text-align:center;
-  outline:0;margin-bottom:10px;font-family:inherit;transition:all 0.25s;
+  outline:0;margin-bottom:10px;font-family:inherit;
+  transition:all 0.25s;
 }
-.inp:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(99,102,241,0.15);background:rgba(255,255,255,0.1)}
+.inp:focus{
+  border-color:#818cf8;box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+  background:rgba(255,255,255,0.1);
+}
+
 .btn{
-  width:100%;padding:15px;border-radius:12px;border:0;font-size:16px;font-weight:700;
-  cursor:pointer;font-family:inherit;margin-bottom:8px;transition:all 0.2s;
+  width:100%;padding:15px;border-radius:12px;border:0;
+  font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+  margin-bottom:8px;transition:all 0.2s;
 }
-.btn.pri{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,0.3)}
-.btn.pri:active{transform:scale(0.97)}
-.btn.sec{background:rgba(255,255,255,0.05);color:#aaa;border:1px solid rgba(255,255,255,0.08)}
+.btn.pri{
+  background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;
+  box-shadow:0 4px 20px rgba(99,102,241,0.3);
+}
+.btn.pri:active{transform:scale(0.97);box-shadow:0 2px 10px rgba(99,102,241,0.4)}
+.btn.sec{
+  background:rgba(255,255,255,0.05);color:#aaa;
+  border:1px solid rgba(255,255,255,0.08);
+}
 .btn.sec:active{background:rgba(255,255,255,0.1);color:#fff;transform:scale(0.97)}
+
 .row{display:flex;gap:10px;align-items:center;justify-content:center;margin:8px 0}
 .num{font-size:40px;font-weight:900;min-width:60px;text-align:center;color:#c4b5fd}
-.adj{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#ccc;font-size:22px;cursor:pointer;transition:all 0.15s}
-.adj:active{background:rgba(99,102,241,0.2);border-color:var(--purple);transform:scale(0.9)}
-.slot{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;text-align:center;flex:1}
+.adj{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#ccc;font-size:22px;cursor:pointer;transition:all 0.15s;
+}
+.adj:active{background:rgba(99,102,241,0.2);border-color:#818cf8;transform:scale(0.9)}
+.slot{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:12px;text-align:center;flex:1;
+}
 .slot .lb{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em}
 .slot .ct{font-size:20px;font-weight:800;margin:4px 0;color:#e0e0e0}
-.slot .adj2{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#ccc;font-size:13px;cursor:pointer;margin:0 3px}
-.slot .adj2:active{background:rgba(99,102,241,0.2);border-color:var(--purple)}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2);border-radius:20px;font-size:13px;color:#c4b5fd;margin:2px}
-.card{width:270px;height:380px;margin:0 auto 16px;perspective:1200px;cursor:pointer}
-.card-in{position:relative;width:100%;height:100%;transition:transform 0.6s cubic-bezier(0.2,0.8,0.3,1.2);transform-style:preserve-3d;will-change:transform}
+.slot .adj2{
+  width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);color:#ccc;font-size:13px;
+  cursor:pointer;margin:0 3px;transition:all 0.15s;
+}
+.slot .adj2:active{background:rgba(99,102,241,0.2);border-color:#818cf8}
+
+.chip{
+  display:inline-flex;align-items:center;gap:4px;padding:7px 14px;
+  background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2);
+  border-radius:20px;font-size:13px;color:#c4b5fd;margin:2px;
+}
+
+.card{
+  width:270px;height:380px;margin:0 auto 16px;
+  perspective:1200px;cursor:pointer;
+}
+.card-in{
+  position:relative;width:100%;height:100%;
+  transition:transform 0.6s cubic-bezier(0.2,0.8,0.3,1.2);
+  transform-style:preserve-3d;will-change:transform;
+}
 .card-in.f{transform:rotateY(180deg)}
-.card-face{position:absolute;inset:0;border-radius:22px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px}
-.card-bk{background:linear-gradient(160deg,#1a1840 0%,#121030 50%,#0e0c28 100%);border:2px solid rgba(99,102,241,0.3);box-shadow:0 10px 40px rgba(99,102,241,0.15)}
-.card-bk::after{content:'';position:absolute;inset:10px;border-radius:14px;border:1.5px solid rgba(99,102,241,0.1)}
+.card-face{
+  position:absolute;inset:0;border-radius:22px;
+  backface-visibility:hidden;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px 18px;
+}
+.card-bk{
+  background:linear-gradient(160deg,#1a1840 0%,#121030 50%,#0e0c28 100%);
+  border:2px solid rgba(99,102,241,0.3);
+  box-shadow:0 10px 40px rgba(99,102,241,0.15);
+}
+.card-bk::after{
+  content:'';position:absolute;inset:10px;border-radius:14px;
+  border:1.5px solid rgba(99,102,241,0.1);
+}
 .card-bk .lg{font-size:52px}
 .card-bk .tp{font-size:13px;color:#777;margin-top:10px;letter-spacing:0.05em}
-.card-ft{background:linear-gradient(160deg,#151525 0%,#1c1c30 50%,#121220 100%);border:2px solid rgba(255,255,255,0.06);transform:rotateY(180deg);gap:6px}
+.card-ft{
+  background:linear-gradient(160deg,#151525 0%,#1c1c30 50%,#121220 100%);
+  border:2px solid rgba(255,255,255,0.06);
+  transform:rotateY(180deg);gap:6px;
+}
+
 .rl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.1em}
 .rn{font-size:34px;font-weight:900}
-.rn.spy{color:#f87171}.rn.civ{color:#4ade80}.rn.wht{color:#a78bfa}
-.sw{font-size:22px;font-weight:800;padding:10px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;letter-spacing:0.02em}
+.rn.spy{color:#f87171}
+.rn.civ{color:#4ade80}
+.rn.wht{color:#a78bfa}
+.sw{
+  font-size:22px;font-weight:800;padding:10px 20px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;letter-spacing:0.02em;
+}
 .sc{font-size:15px;color:#aaa;margin-top:12px;font-weight:600}
 .flex-1{flex:1}.mt-a{margin-top:auto}.tc{text-align:center}.mb8{margin-bottom:8px}
-.exit-btn{position:absolute;top:8px;right:8px;z-index:10;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#999;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+.exit-btn{
+  position:absolute;top:8px;right:8px;z-index:10;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#999;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
 .exit-btn:active{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:#f87171}
-.gear-btn{position:absolute;top:8px;right:48px;z-index:10;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#999;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center}
-.gear-btn:active{background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.3);color:var(--purple)}
+.gear-btn{
+  position:absolute;top:8px;right:48px;z-index:10;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#999;font-size:16px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+}
+.gear-btn:active{background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.3);color:#818cf8}
 .gear-btn.show{display:flex}
-.settings-modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center}
+
+.settings-modal{
+  position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.7);
+  display:none;align-items:center;justify-content:center;
+}
 .settings-modal.show{display:flex}
-.settings-panel{background:rgba(22,22,44,0.96);border:1px solid rgba(99,102,241,0.15);border-radius:18px;padding:24px;width:90%;max-width:340px}
-.settings-panel h3{color:var(--purple);text-align:center;margin-bottom:16px;font-size:17px}
+.settings-panel{
+  background:rgba(22,22,44,0.96);border:1px solid rgba(99,102,241,0.15);
+  border-radius:18px;padding:24px;width:90%;max-width:340px;
+}
+.settings-panel h3{color:#818cf8;text-align:center;margin-bottom:16px;font-size:17px}
 .settings-row{display:flex;align-items:center;justify-content:space-between;margin:12px 0;color:#ccc;font-size:15px}
 .settings-row .adj2{width:34px;height:34px}
-.vote-item{display:flex;align-items:center;gap:10px;cursor:pointer;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;transition:all 0.2s}
+
+.vote-item{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:12px;padding:14px 16px;margin-bottom:8px;
+  transition:all 0.2s;
+}
 .vote-item:active{border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)}
 .vote-item .v-name{flex:1;font-weight:600;font-size:15px;color:#ddd}
 .vote-item .v-count{font-size:12px;color:#777}
+
 #chatBox{padding:4px 0;display:flex;flex-direction:column;gap:6px}
 .chat-msg{display:flex;align-items:flex-end;gap:6px;animation:chatPop 0.2s ease}
 @keyframes chatPop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .chat-msg .who{font-size:10px;color:#999;font-weight:600;min-width:36px;text-align:right;margin-bottom:2px}
-.chat-msg .txt{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:14px;color:#ccc;max-width:78%;line-height:1.4}
+.chat-msg .txt{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+  border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:14px;color:#ccc;
+  max-width:78%;line-height:1.4;
+}
 .chat-msg.me{flex-direction:row-reverse}
-.chat-msg.me .who{text-align:left;color:var(--purple2)}
-.chat-msg.me .txt{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.2);color:#ddd;border-radius:16px 16px 4px 16px}
+.chat-msg.me .who{text-align:left;color:#a78bfa}
+.chat-msg.me .txt{
+  background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.2);
+  color:#ddd;border-radius:16px 16px 4px 16px;
+}
+
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:2px}
+
 .hidden{display:none!important}
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-<canvas id="particles"></canvas>
 <div class="app">
-<!-- Lobby - Cyberpunk Hero -->
+<!-- Lobby -->
 <div class="s a" id="s0">
  <div class="flex-1"></div>
- <div class="hero-logo">AI LÀ GIÁN ĐIỆP</div>
- <div class="hero-sub">Game đoán vai · Online & Offline</div>
- <button class="game-btn pri" onclick="hien('s8')"><span class="btn-icon">🌐</span>CHƠI ONLINE</button>
- <button class="game-btn" onclick="taoPhongOffline()"><span class="btn-icon">📴</span>CHƠI OFFLINE</button>
- <div class="neon-line"></div>
- <button class="game-btn" onclick="hien('s10')"><span class="btn-icon">📖</span>HƯỚNG DẪN</button>
+ <h1 class="tc">🕵️ Gián Điệp</h1>
+ <p class="p tc">Game đoán vai trực tuyến</p>
+ <div class="flex-1"></div>
+ <button class="btn pri" onclick="hien('s8')" style="font-size:18px;padding:20px">🌐 Chế Độ Online</button>
+ <div style="height:10px"></div>
+ <button class="btn sec" onclick="taoPhongOffline()" style="font-size:16px;padding:16px">📴 Chơi Offline</button>
+ <button class="btn pri" onclick="hien('s10')" style="font-size:14px;padding:14px;margin-top:8px;background:rgba(255,255,255,0.04);color:#818cf8;border:1px solid rgba(99,102,241,0.15)">📖 Hướng dẫn</button>
  <div class="flex-1"></div>
 </div>
 
 <!-- Online Lobby -->
 <div class="s" id="s8">
  <div class="flex-1"></div>
- <h2 class="tc">Chế Độ Online</h2>
+ <h2 class="tc">🌐 Chế Độ Online</h2>
  <p class="p tc">Nhập tên để bắt đầu</p>
  <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="20">
- <button class="btn pri" onclick="taoPhong()">Tạo Phòng Mới</button>
+ <button class="btn pri" onclick="taoPhong()">🏠 Tạo Phòng Mới</button>
  <div class="row"><span style="color:#444;font-size:13px">— hoặc —</span></div>
  <div class="row" style="gap:8px">
   <input class="inp" id="maPhongInput" placeholder="Mã phòng..." style="margin:0;flex:1;text-transform:uppercase" maxlength="6">
@@ -200,30 +256,30 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
 <div class="s" id="s1" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <button class="gear-btn" onclick="openSettings()">⚙</button>
- <div style="flex:0;min-height:10px"></div>
- <h2>Cài đặt</h2>
- <p class="p">Mã phòng: <strong id="maPhongDisp" style="color:var(--purple);letter-spacing:0.1em">OFFLINE</strong></p>
+ <div class="flex-1" style="flex:0;min-height:10px"></div>
+ <h2>⚙️ Cài đặt</h2>
+ <p class="p">Mã phòng: <strong id="maPhongDisp" style="color:#818cf8;letter-spacing:0.1em" data-offline-text="OFFLINE"></strong></p>
  <div style="margin:12px 0">
   <div style="font-size:13px;color:#999;margin-bottom:8px">Danh sách (<span id="numTong">2</span> người):</div>
   <div id="playerListSetup" style="display:flex;flex-wrap:wrap;gap:6px;min-height:36px;align-items:center"></div>
   <button class="btn sec" onclick="themNguoi()" id="themNguoiBtn" style="width:100%;padding:10px;margin-top:10px;font-size:14px">+ Thêm người</button>
  </div>
  <div class="row" style="gap:8px">
-  <div class="slot"><div class="lb">Dân</div><div class="ct" id="numDan">1</div></div>
-  <div class="slot"><div class="lb">Gián điệp</div><div class="ct" id="numSpy">1</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
-  <div class="slot"><div class="lb">Mũ trắng</div><div class="ct" id="numHat">0</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
+  <div class="slot"><div class="lb">👤 Dân</div><div class="ct" id="numDan">1</div></div>
+  <div class="slot"><div class="lb">🕵️ Gián điệp</div><div class="ct" id="numSpy">1</div><button class="adj2" onclick="adjSpy(-1)">−</button><button class="adj2" onclick="adjSpy(1)">+</button></div>
+  <div class="slot"><div class="lb">🎩 Mũ trắng</div><div class="ct" id="numHat">0</div><button class="adj2" onclick="adjHat(-1)">−</button><button class="adj2" onclick="adjHat(1)">+</button></div>
  </div>
- <button class="btn sec" id="blindBtn" onclick="toggleBlind()" style="width:100%;padding:14px;margin:6px 0;font-size:15px;text-align:center">Ẩn vai trò: TẮT</button>
- <div style="flex:0;min-height:10px"></div>
- <button class="btn pri" onclick="batDau()">Bắt đầu</button>
- <button class="btn sec" onclick="roiPhong()">Rời phòng</button>
+ <button class="btn sec" id="blindBtn" onclick="toggleBlind()" style="width:100%;padding:14px;margin:6px 0;font-size:15px;text-align:center">🙈 Ẩn vai trò: TẮT</button>
+ <div class="flex-1" style="flex:0;min-height:10px"></div>
+ <button class="btn pri" onclick="batDau()">🚀 Bắt đầu</button>
+ <button class="btn sec" onclick="roiPhong()">🚪 Rời phòng</button>
 </div>
 
 <!-- Draw -->
 <div class="s tc" id="s2" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <button class="gear-btn" onclick="openSettings()">⚙</button>
- <div id="thuTuBai" style="font-size:28px;font-weight:900;color:var(--purple);padding:12px 0">Người 1/8</div>
+ <div id="thuTuBai" style="font-size:28px;font-weight:900;color:#818cf8;padding:12px 0;text-shadow:0 0 20px rgba(99,102,241,0.3);flex-shrink:0">Người 1/8</div>
  <div class="flex-1"></div>
  <div class="card" onclick="latBai()">
   <div class="card-in" id="cardIn">
@@ -233,24 +289,24 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
     <div class="rn" id="vaiText">—</div>
     <div class="sw" id="tuText" style="display:none">—</div>
     <div class="p" id="goiYText"></div>
-    <button class="btn sec" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px">Đã xong</button>
+    <button class="btn sec" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px">✅ Đã xong</button>
    </div>
   </div>
  </div>
  <div class="flex-1"></div>
 </div>
 
-<!-- Waiting -->
+  <!-- Waiting with timer -->
 <div class="s" id="s3" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <button class="gear-btn" onclick="openSettings()">⚙</button>
  <div id="nameCardArea" style="display:none;text-align:center;margin-bottom:8px">
-  <div style="font-size:12px;color:#666;margin-bottom:4px">Đang nói:</div>
+  <div style="font-size:12px;color:#666;margin-bottom:4px">🔊 Đang nói:</div>
   <div id="currentSpeaker" style="font-size:24px;font-weight:900;padding:12px 20px;background:#1a1a1a;border:1px solid #333;border-radius:14px;display:inline-block">—</div>
   <div style="font-size:12px;color:#555;margin-top:4px">Thứ tự: <span id="speakerOrder">1</span>/<span id="speakerTotal">2</span></div>
-  <div id="timerArea" style="display:none;font-size:36px;font-weight:900;margin-top:8px;background:linear-gradient(135deg,var(--purple),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">3:00</div>
+  <div id="timerArea" style="display:none;font-size:36px;font-weight:900;margin-top:8px;background:linear-gradient(135deg,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">3:00</div>
  </div>
- <h3 id="waitTitle">Đang chờ...</h3>
+ <h3 id="waitTitle">⏳ Đang chờ...</h3>
  <p class="p tc" id="waitSub">...</p>
  <div id="chatBox" style="flex:1;overflow-y:auto;padding:4px 0;display:none;min-height:0"></div>
  <div id="chatInputRow" style="display:none;gap:8px;margin-top:8px">
@@ -258,8 +314,8 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
   <button class="btn pri" onclick="guiChat()" style="width:auto;padding:14px 20px;margin:0">Gửi</button>
  </div>
  <div style="display:flex;gap:8px;margin-top:8px">
-  <button class="btn pri" id="waitBtn" style="display:none;flex:1" onclick="waitAction()">Bắt đầu 3 phút</button>
-  <button class="btn sec" id="skipBtn" style="display:none;flex:1" onclick="skipVote()">Bỏ qua → Vote</button>
+  <button class="btn pri" id="waitBtn" style="display:none;flex:1" onclick="waitAction()">⏱️ Bắt đầu 3 phút</button>
+  <button class="btn sec" id="skipBtn" style="display:none;flex:1" onclick="skipVote()">⏩ Bỏ qua → Vote</button>
  </div>
 </div>
 
@@ -268,10 +324,10 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <button class="gear-btn" onclick="openSettings()">⚙</button>
  <div class="tc mb8"><span class="rl" id="vongText">VÒNG 1</span></div>
- <div class="tc" style="font-size:18px;font-weight:700;margin-bottom:12px">Chọn người bị loại</div>
+ <div class="tc" style="font-size:18px;font-weight:700;margin-bottom:12px">🗳️ Chọn người bị loại</div>
  <div id="voteList" style="flex:1;overflow-y:auto"></div>
  <div class="tc" style="color:#555;font-size:12px;margin:8px 0">Tổng: <span id="voteTong">0</span>/<span id="voteDaVote">0</span> đã vote</div>
- <button class="btn pri" id="voteBtn" onclick="boPhieu()" disabled>Bỏ phiếu</button>
+ <button class="btn pri" id="voteBtn" onclick="boPhieu()" disabled>🗳️ Bỏ phiếu</button>
 </div>
 
 <!-- Result -->
@@ -291,12 +347,12 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
 <div class="s tc" id="s6" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <div class="flex-1"></div>
- <h3>Mũ Trắng — Đoán từ!</h3>
+ <h3>🎩 Mũ Trắng — Đoán từ!</h3>
  <p class="p" style="font-size:13px;color:#f87171">Sai hoặc hết giờ là bị loại ngay</p>
- <p style="color:var(--purple);font-size:16px;font-weight:600" id="goiYDoan">—</p>
- <div id="guessTimer" style="font-size:36px;font-weight:900;color:#f87171;margin:8px 0">20</div>
+ <p style="color:#818cf8;font-size:16px;font-weight:600" id="goiYDoan">—</p>
+ <div id="guessTimer" style="font-size:36px;font-weight:900;color:#f87171;margin:8px 0">⏱ 20</div>
  <input class="inp" id="doanInput" placeholder="Nhập từ khóa chính xác..." maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guiDoan()">
- <button class="btn pri" onclick="guiDoan()" id="guessBtn">Đoán</button>
+ <button class="btn pri" onclick="guiDoan()" id="guessBtn">🎯 Đoán</button>
  <div class="flex-1"></div>
 </div>
 
@@ -304,26 +360,27 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
 <div class="s tc" id="s7" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <div class="flex-1"></div>
- <div style="font-size:64px" id="iconThang"></div>
+ <div style="font-size:64px" id="iconThang">🏆</div>
  <div style="font-size:28px;font-weight:900" id="textThang">—</div>
  <p class="p" id="subThang"></p>
  <div class="flex-1"></div>
- <button class="btn sec" onclick="roiPhong()">Về phòng chờ</button>
- <button class="btn sec" id="choiLaiBtn" style="display:none" onclick="choiLai()">Chơi lại</button>
+ <button class="btn sec" onclick="roiPhong()">🏠 Về phòng chờ</button>
+ <button class="btn sec" id="choiLaiBtn" style="display:none" onclick="choiLai()">🔄 Chơi lại</button>
+</div>
 </div>
 
 <!-- Help -->
 <div class="s" id="s10" style="position:relative;overflow-y:auto">
  <button class="exit-btn" onclick="hien('s0')">✕</button>
- <h2 style="text-align:center;margin:16px 0 4px">Hướng dẫn</h2>
+ <h2 style="text-align:center;margin:16px 0 4px">📖 Hướng dẫn</h2>
  <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:var(--purple);margin-bottom:8px">Mục tiêu</h3>
+  <h3 style="color:#818cf8;margin-bottom:8px">🎯 Mục tiêu</h3>
   <p>👤 <b>Dân làng</b> — Biết từ khóa chính xác. Thắng khi loại hết Gián điệp + Mũ Trắng.</p>
-  <p>🕵️ <b>Gián điệp</b> — Biết từ gần giống. Thắng khi Dân làng còn &le; 40%.</p>
+  <p>🕵️ <b>Gián điệp</b> — Biết từ gần giống. Thắng khi Dân làng còn ≤ 40%.</p>
   <p>🎩 <b>Mũ Trắng</b> (phe thứ 3) — Chỉ biết gợi ý. Bị vote → có 20s đoán từ. Đúng = thắng luôn!</p>
  </div>
  <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:var(--purple);margin-bottom:8px">Chế Độ Offline (1 máy)</h3>
+  <h3 style="color:#818cf8;margin-bottom:8px">📴 Chế Độ Offline (1 máy)</h3>
   <p>1. Bấm <b>Chơi Offline</b> → nhập số người → từng người nhập tên</p>
   <p>2. Tới lượt ai, màn hình hiện tên to phía trên → <b>chạm thẻ</b> để xem vai trò</p>
   <p>3. Xem xong bấm <b>Đã xong</b> → chuyền máy cho người kế</p>
@@ -333,7 +390,7 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
   <p>7. Chủ phòng có nút ⚙️ để chỉnh số Gián điệp/Mũ Trắng, áp dụng ván sau</p>
  </div>
  <div class="glass" style="margin:8px 0;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:var(--purple);margin-bottom:8px">Chế Độ Online (nhiều máy)</h3>
+  <h3 style="color:#818cf8;margin-bottom:8px">🌐 Chế Độ Online (nhiều máy)</h3>
   <p>1. <b>Tạo Phòng</b> → nhập tên → chia sẻ mã phòng cho bạn</p>
   <p>2. Người khác <b>Vào phòng</b> bằng mã, nhập tên</p>
   <p>3. Chủ phòng chỉnh số Gián điệp / Mũ Trắng qua ⚙️</p>
@@ -344,8 +401,8 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
   <p>8. Lỡ load lại trang? Tự động rejoin phòng nếu game chưa kết thúc!</p>
  </div>
  <div class="glass" style="margin:8px 0 20px;font-size:14px;line-height:1.7;color:#ccc">
-  <h3 style="color:var(--purple);margin-bottom:8px">Từ khóa</h3>
-  <p>1000 cặp từ đủ mọi chủ đề: nghệ sĩ, cầu thủ, món ăn, đồ vật, động vật...</p>
+  <h3 style="color:#818cf8;margin-bottom:8px">⭐ Từ khóa</h3>
+  <p>51 cặp từ toàn người nổi tiếng: Sơn Tùng, MCK, Messi, Ronaldo, Taylor Swift, Blackpink, BTS, Trấn Thành, Đen Vâu, Elon Musk...</p>
   <p>Dân làng biết tên đúng, Gián điệp biết tên gần giống, Mũ Trắng chỉ biết nghề nghiệp/lĩnh vực.</p>
  </div>
  <button class="btn sec" onclick="hien('s0')" style="margin:0 0 20px">← Quay lại</button>
@@ -354,14 +411,33 @@ h2{font-size:22px;font-weight:800;color:#e0e0e0}
 <!-- Settings Modal -->
 <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
  <div class="settings-panel">
-  <h3>Cài đặt trận đấu</h3>
-  <div class="settings-row"><span>Dân làng</span><span id="setDan" style="font-weight:800;color:#4ade80">-</span></div>
-  <div class="settings-row"><span>Gián điệp</span><span><button class="adj2" onclick="adjPendingSpy(-1)">−</button><span id="setSpy" style="font-weight:800;color:#f87171;margin:0 8px">-</span><button class="adj2" onclick="adjPendingSpy(1)">+</button></span></div>
-  <div class="settings-row"><span>Mũ trắng</span><span><button class="adj2" onclick="adjPendingHat(-1)">−</button><span id="setHat" style="font-weight:800;color:var(--purple2);margin:0 8px">-</span><button class="adj2" onclick="adjPendingHat(1)">+</button></span></div>
-  <div style="text-align:center;margin-top:16px"><button class="btn pri" onclick="closeSettings()" style="width:auto;padding:10px 32px;font-size:14px">Đóng</button></div>
+  <h3>⚙️ Cài đặt trận đấu</h3>
+  <div class="settings-row">
+   <span>👤 Dân làng</span>
+   <span id="setDan" style="font-weight:800;color:#4ade80">-</span>
+  </div>
+  <div class="settings-row">
+   <span>🕵️ Gián điệp</span>
+   <span>
+    <button class="adj2" onclick="adjPendingSpy(-1)">−</button>
+    <span id="setSpy" style="font-weight:800;color:#f87171;margin:0 8px">-</span>
+    <button class="adj2" onclick="adjPendingSpy(1)">+</button>
+   </span>
+  </div>
+  <div class="settings-row">
+   <span>🎩 Mũ trắng</span>
+   <span>
+    <button class="adj2" onclick="adjPendingHat(-1)">−</button>
+    <span id="setHat" style="font-weight:800;color:#a78bfa;margin:0 8px">-</span>
+    <button class="adj2" onclick="adjPendingHat(1)">+</button>
+   </span>
+  </div>
+  <div style="text-align:center;margin-top:16px">
+   <button class="btn pri" onclick="closeSettings()" style="width:auto;padding:10px 32px;font-size:14px">Đóng</button>
+  </div>
  </div>
 </div>
-</div>
+
 <script>
 var firebaseConfig = {
   apiKey: "AIzaSyAFpnzjUdHCL_j7CWsDeJvGVXcr2wOryow",
@@ -1347,44 +1423,5 @@ setInterval(function(){
 },2000);
 </script>
 <script src="agentation-bundle.js"></script>
-
-<script>
-// Particle animation
-(function(){
-  var c=document.getElementById('particles'),ctx=c.getContext('2d'),particles=[];
-  var colors=['rgba(129,140,248,0.15)','rgba(167,139,250,0.1)','rgba(99,102,241,0.12)'];
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
-  resize();window.addEventListener('resize',resize);
-  for(var i=0;i<20;i++)particles.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,vx:(Math.random()-0.5)*0.2,vy:-(Math.random()*0.3+0.1),c:colors[Math.floor(Math.random()*colors.length)]});
-  function draw(){ctx.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<particles.length;i++){var p=particles[i];p.x+=p.vx;p.y+=p.vy;
-      if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width}
-      if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill()}
-    requestAnimationFrame(draw)}
-  draw();
-})();
-<\/script>
-</body>
-</html>
-
-
-<script>
-// Particle animation
-(function(){
-  var c=document.getElementById('particles'),ctx=c.getContext('2d'),particles=[];
-  var colors=['rgba(129,140,248,0.15)','rgba(167,139,250,0.1)','rgba(99,102,241,0.12)'];
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
-  resize();window.addEventListener('resize',resize);
-  for(var i=0;i<20;i++)particles.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,vx:(Math.random()-0.5)*0.2,vy:-(Math.random()*0.3+0.1),c:colors[Math.floor(Math.random()*colors.length)]});
-  function draw(){ctx.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<particles.length;i++){var p=particles[i];p.x+=p.vx;p.y+=p.vy;
-      if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width}
-      if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill()}
-    requestAnimationFrame(draw)}
-  draw();
-})();
-<\/script>
 </body>
 </html>
