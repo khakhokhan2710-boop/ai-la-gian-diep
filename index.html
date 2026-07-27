@@ -565,7 +565,7 @@ function s9Next() {
       gs = {
         host: myId, hostName: myName, total: s9Total, spies: sp, whiteHats: wh,
         status: 'setup', pair: capNN(), players: players, eliminated: {},
-        turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
+        turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0, blindMode: blindMode
       };
       chuPhong = true; chuanBiXong = false;
       document.getElementById('maPhongDisp').textContent = 'OFFLINE';
@@ -678,7 +678,7 @@ function taoPhong() {
   var data = {
     host: myId, hostName: ten, total: 2, spies: 1, whiteHats: 0,
     status: 'setup', pair: capNN(), players: {}, eliminated: {},
-    turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0
+    turnOrder: [], currentTurn: -1, cardsSeen: {}, votes: {}, round: 0, blindMode: false
   };
   data.players[myId] = { name: ten, deviceId: deviceId };
   roomRef.set(data).then(function(){
@@ -928,8 +928,7 @@ function xuLyRutBai() {
 function latBai(){
   if(!currentCardPlayer) return;
   var cp = currentCardPlayer, a = cp.a;
-  var isBlind = gs.blindMode || blindMode;
-  if(isBlind && a.role !== 'white_hat') {
+  if(blindMode && a.role !== 'white_hat') {
     // Blind mode: hide role, only White Hat sees their role
     document.getElementById('vaiLabel').textContent = 'Vai trò';
     document.getElementById('vaiText').textContent = '???';
