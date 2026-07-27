@@ -982,23 +982,23 @@ function choiLai() {
   if(pendingHats!=null) { gs.whiteHats = pendingHats; }
   pendingSpies = null; pendingHats = null;
   if(isOffline) {
-    // Keep player names, re-roll roles
+    // Go back to setup screen for adjustments
     gs.round = 0;
     gs.cardsSeen = {};
     gs.eliminated = {};
     gs.votes = {};
     gs.currentTurn = -1;
     gs.pair = capNN();
+    gs.status = 'setup';
     chuanBiXong = false;
-    batDauVe();
+    capNhatUI();
+    hien('s1');
   } else if(roomRef && chuPhong) {
-    // Online: reset game state on Firebase, keep players, start new game directly
+    // Online: go back to setup, keep players
     roomRef.update({
       round: 0, cardsSeen: {}, eliminated: {}, votes: {},
-      currentTurn: -1, pair: capNN(), phase: 'join',
+      currentTurn: -1, pair: capNN(), status: 'setup',
       spies: gs.spies, whiteHats: gs.whiteHats
-    }).then(function() {
-      batDauVe();
     }).catch(function(e) { alert('Lỗi: ' + e.message); });
   }
 }
