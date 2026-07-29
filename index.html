@@ -909,6 +909,7 @@ function choiLai() {
     gs.currentTurn = -1;
     gs.pair = capNN();
     gs.status = 'setup';
+    gs.assignments = null;
     chuanBiXong = false;
     capNhatUI();
     hien('s1');
@@ -1346,40 +1347,19 @@ setInterval(function(){
 <script>
 // Particle animation
 (function(){
-  var c=document.getElementById('particles'),ctx=c.getContext('2d'),particles=[];
-  var colors=['rgba(129,140,248,0.15)','rgba(167,139,250,0.1)','rgba(99,102,241,0.12)'];
+  var c=document.getElementById("particles"),ctx=c.getContext("2d"),ps=[];
+  var colors=["rgba(129,140,248,0.15)","rgba(167,139,250,0.1)","rgba(99,102,241,0.12)"];
   function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
-  resize();window.addEventListener('resize',resize);
-  for(var i=0;i<20;i++)particles.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,vx:(Math.random()-0.5)*0.2,vy:-(Math.random()*0.3+0.1),c:colors[Math.floor(Math.random()*colors.length)]});
+  resize();window.addEventListener("resize",resize);
+  for(var i=0;i<20;i++)ps.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,vx:(Math.random()-0.5)*0.2,vy:-(Math.random()*0.3+0.1),c:colors[Math.floor(Math.random()*colors.length)]});
   function draw(){ctx.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<particles.length;i++){var p=particles[i];p.x+=p.vx;p.y+=p.vy;
+    for(var i=0;i<ps.length;i++){var p=ps[i];p.x+=p.vx;p.y+=p.vy;
       if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width}
       if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
       ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill()}
     requestAnimationFrame(draw)}
   draw();
 })();
-<\/script>
-</body>
-</html>
-
-
-<script>
-// Particle animation
-(function(){
-  var c=document.getElementById('particles'),ctx=c.getContext('2d'),particles=[];
-  var colors=['rgba(129,140,248,0.15)','rgba(167,139,250,0.1)','rgba(99,102,241,0.12)'];
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
-  resize();window.addEventListener('resize',resize);
-  for(var i=0;i<20;i++)particles.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,vx:(Math.random()-0.5)*0.2,vy:-(Math.random()*0.3+0.1),c:colors[Math.floor(Math.random()*colors.length)]});
-  function draw(){ctx.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<particles.length;i++){var p=particles[i];p.x+=p.vx;p.y+=p.vy;
-      if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width}
-      if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill()}
-    requestAnimationFrame(draw)}
-  draw();
-})();
-<\/script>
+</script>
 </body>
 </html>
