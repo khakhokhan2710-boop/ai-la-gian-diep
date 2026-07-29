@@ -902,6 +902,7 @@ function choiLai() {
   pendingSpies = null; pendingHats = null;
   if(isOffline) {
     // Go back to setup screen for adjustments
+    if(!gs || !gs.players) { alert('Lỗi: không tìm thấy dữ liệu game!'); return; }
     gs.round = 0;
     gs.cardsSeen = {};
     gs.eliminated = {};
@@ -909,6 +910,7 @@ function choiLai() {
     gs.currentTurn = -1;
     gs.pair = capNN();
     gs.status = 'setup';
+    gs.assignments = null;
     chuanBiXong = false;
     capNhatUI();
     hien('s1');
