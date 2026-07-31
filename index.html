@@ -647,7 +647,7 @@ function batDauVe() {
     if(!g) return;
     var ps = []; for(var k in (g.players||{})) ps.push(k);
     if(ps.length<2) return;
-    var pair = g.pair || capNN();
+    var pair = g.pair || gs.pair;
     var roles = [];
     for(var i=0;i<(g.spies||0);i++) roles.push('spy');
     for(var i=0;i<(g.whiteHats||0);i++) roles.push('white_hat');
