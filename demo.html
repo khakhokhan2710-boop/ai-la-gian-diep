@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI LÀ GIÁN ĐIỆP — Full UI Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="app">
+
+<!-- ====== S0: LOBBY ====== -->
+<div class="s a" id="s0">
+  <div class="hero-logo">AI LÀ GIÁN ĐIỆP</div>
+  <div class="hero-sub">Game đoán vai · Online & Offline</div>
+  <button class="game-btn pri" onclick="show('sOnline')"><span class="btn-icon">🌐</span>CHƠI ONLINE</button>
+  <button class="game-btn" onclick="show('sNameSetup')"><span class="btn-icon">📴</span>CHƠI OFFLINE</button>
+  <div class="neon-line"></div>
+  <button class="game-btn" onclick="show('sGuide')"><span class="btn-icon">📖</span>HƯỚNG DẪN</button>
+</div>
+
+<!-- ====== ONLINE LOBBY ====== -->
+<div class="s" id="sOnline">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div class="flex-1" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="glass" style="width:100%;text-align:center">
+      <h2 style="margin-bottom:8px">🌐 Chơi Online</h2>
+      <p class="p">Nhập tên để bắt đầu</p>
+      <input class="inp" placeholder="Tên của bạn..." maxlength="20">
+      <button class="btn pri">Tạo Phòng Mới</button>
+      <button class="btn sec" onclick="show('s0')">← Quay lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TÊN NGƯỜI CHƠI ====== -->
+<div class="s" id="sNameSetup">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div class="flex-1" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="glass" style="width:100%;text-align:center;padding:32px 24px">
+      <div style="font-size:48px;margin-bottom:8px">👤</div>
+      <h2 style="font-size:22px;margin-bottom:8px">Có bao nhiêu người chơi?</h2>
+      <p class="p" style="margin-bottom:16px">Gõ tên từng người, cách nhau bằng dấu phẩy</p>
+      <input class="inp" id="namesInput" placeholder="VD: Tuấn, Lan, Minh, Huy, Mai" style="font-size:16px;padding:15px;text-align:center">
+      <button class="btn pri" onclick="show('sSettings')">Tiếp tục</button>
+      <button class="btn sec" onclick="show('s0')">← Quay lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== CÀI ĐẶT VÁN ====== -->
+<div class="s" id="sSettings">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div style="height:16px"></div>
+  <div class="glass">
+    <h2 style="margin-bottom:12px">Cài đặt ván chơi</h2>
+    <p class="p">Người chơi: <strong style="color:var(--purple-2)">Tuấn, Lan, Minh, Huy, Mai</strong></p>
+    <p class="p">Số người chơi</p>
+    <div class="row">
+      <button class="adj">−</button>
+      <div class="num">5</div>
+      <button class="adj">+</button>
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:16px">
+      <div class="slot">
+        <div class="lb">Gián điệp</div>
+        <div class="ct">1</div>
+        <div><button class="adj2">−</button><button class="adj2">+</button></div>
+      </div>
+      <div class="slot">
+        <div class="lb">Thường dân</div>
+        <div class="ct">3</div>
+        <div><button class="adj2">−</button><button class="adj2">+</button></div>
+      </div>
+      <div class="slot">
+        <div class="lb">Sherlock</div>
+        <div class="ct">1</div>
+        <div><button class="adj2">−</button><button class="adj2">+</button></div>
+      </div>
+    </div>
+    <p class="p" style="margin-top:12px;font-size:11px;color:var(--text-7)">Tổng: 5/5 người</p>
+  </div>
+  <button class="btn pri" onclick="show('sRoleReveal')" style="margin-top:16px">Bắt đầu!</button>
+  <button class="btn sec" onclick="show('sNameSetup')">← Quay lại</button>
+</div>
+
+<!-- ====== ROLE REVEAL (mặt sau -> lật) ====== -->
+<div class="s" id="sRoleReveal">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+    <button class="gear-btn show">⚙</button>
+  </div>
+  <div class="flex-1" style="display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <p class="p" style="margin-bottom:8px">Lượt <strong>Minh</strong></p>
+    <div class="card" onclick="this.querySelector('.card-in').classList.toggle('f')">
+      <div class="card-in">
+        <div class="card-face card-bk">
+          <div class="lg">🕵️</div>
+          <div class="tp">Chạm vào thẻ để xem</div>
+        </div>
+        <div class="card-face card-ft">
+          <div class="rl">📍 Địa điểm</div>
+          <div class="rn spy">BỆNH VIỆN</div>
+          <div class="chip" style="margin-top:8px">🕵️ GIÁN ĐIỆP</div>
+          <div class="sc">Không được để lộ!</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn pri" style="width:auto;padding:12px 28px" onclick="show('sRoleWait')">Đã xong →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== CHỜ NGƯỜI KHÁC XEM THẺ ====== -->
+<div class="s" id="sRoleWait">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div class="flex-1" style="display:flex;align-items:center;justify-content:center;flex-direction:center">
+    <div class="glass" style="width:100%;text-align:center;padding:40px 20px">
+      <div style="font-size:40px;margin-bottom:12px">⏳</div>
+      <h2 style="margin-bottom:4px">Đưa máy cho người tiếp theo</h2>
+      <p class="p" style="margin-bottom:4px">Người tiếp theo: <strong style="color:var(--purple-2);font-size:20px">Lan</strong></p>
+      <p class="p" style="font-size:12px;color:var(--text-7)">Sau khi mọi người đã xong, bấm "Bắt đầu thảo luận"</p>
+      <button class="btn pri" onclick="show('sChat')" style="margin-top:16px">Bắt đầu thảo luận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== CHAT / THẢO LUẬN ====== -->
+<div class="s" id="sChat">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div class="glass" style="margin-top:16px;flex:1;display:flex;flex-direction:column;min-height:0">
+    <h2 style="margin-bottom:8px">💬 Thảo luận</h2>
+    <p class="p">Còn 3:00 · Lượt cuối</p>
+    <div id="chatBox" style="flex:1;overflow-y:auto;margin-bottom:8px">
+      <div class="chat-msg"><span class="who">A</span><span class="txt">Mọi người thấy sao?</span></div>
+      <div class="chat-msg me"><span class="who">Bạn</span><span class="txt">Tui nghi người D</span></div>
+      <div class="chat-msg"><span class="who">B</span><span class="txt">Tui cũng thấy D lạ</span></div>
+      <div class="chat-msg"><span class="who">C</span><span class="txt">Sao lại nghi D? 🤔</span></div>
+      <div class="chat-msg"><span class="who">D</span><span class="txt">Trời ơi đâu có 😅</span></div>
+      <div class="chat-msg me"><span class="who">Bạn</span><span class="txt">D giải thích đi</span></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input class="inp" placeholder="Nhắn..." style="margin-bottom:0;flex:1;text-align:left">
+      <button class="btn pri" style="width:auto;padding:15px 20px;margin-bottom:0">Gửi</button>
+    </div>
+  </div>
+  <button class="btn pri" onclick="show('sVote')" style="margin-top:8px">Bỏ phiếu</button>
+</div>
+
+<!-- ====== BỎ PHIẾU ====== -->
+<div class="s" id="sVote">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div style="height:40px"></div>
+  <div class="glass">
+    <h2 style="margin-bottom:12px">🗳️ Bỏ phiếu</h2>
+    <p class="p">Chọn người bạn nghi là <strong style="color:#f87171">gián điệp</strong></p>
+    <div class="vote-item"><span class="v-name">Tuấn</span><span class="v-count">2 phiếu</span></div>
+    <div class="vote-item"><span class="v-name">Lan</span><span class="v-count">1 phiếu</span></div>
+    <div class="vote-item"><span class="v-name">Minh</span><span class="v-count">0 phiếu</span></div>
+    <div class="vote-item"><span class="v-name">Huy</span><span class="v-count">0 phiếu</span></div>
+    <div class="vote-item"><span class="v-name">Mai</span><span class="v-count">2 phiếu</span></div>
+  </div>
+  <button class="btn pri" onclick="show('sResult')" style="margin-top:16px">Xem kết quả</button>
+</div>
+
+<!-- ====== KẾT QUẢ ====== -->
+<div class="s" id="sResult">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div class="flex-1" style="display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <div class="glass" style="width:100%;text-align:center;padding:32px 24px">
+      <div style="font-size:56px;margin-bottom:12px">🎉</div>
+      <h2 style="margin-bottom:4px">Thường dân thắng!</h2>
+      <p class="p" style="margin-bottom:16px">Gián điệp đã bị lộ</p>
+      <div class="chip" style="font-size:15px;padding:10px 20px">🕵️ Gián điệp là: <strong style="color:#f87171">Minh</strong></div>
+      <div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+        <span class="chip">📍 Địa điểm: Bệnh viện</span>
+      </div>
+    </div>
+  </div>
+  <button class="btn pri" onclick="show('s0')">Chơi lại</button>
+</div>
+
+<!-- ====== HƯỚNG DẪN ====== -->
+<div class="s" id="sGuide">
+  <div style="position:relative">
+    <button class="exit-btn" onclick="show('s0')">✕</button>
+  </div>
+  <div style="height:16px"></div>
+  <div class="glass">
+    <h2 style="margin-bottom:12px">📖 Hướng dẫn</h2>
+    <p class="p" style="line-height:1.6">
+      1. Mỗi người lần lượt xem thẻ vai trò<br>
+      2. Cả nhóm thảo luận để tìm ra gián điệp<br>
+      3. Bỏ phiếu — ai nhiều phiếu nhất bị loại<br>
+      4. Gián điệp thắng nếu không bị phát hiện
+    </p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center">
+      <span class="chip" style="border-color:#f87171;color:#f87171">🕵️ Gián điệp</span>
+      <span class="chip" style="border-color:#4ade80;color:#4ade80">👤 Thường dân</span>
+      <span class="chip" style="border-color:var(--purple-2);color:var(--purple-2)">🔍 Sherlock</span>
+    </div>
+  </div>
+  <button class="btn sec" onclick="show('s0')" style="margin-top:12px">← Quay lại</button>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// Screen switcher (no-op, just UI demo)
+function show(id) {
+  document.querySelectorAll('.s').forEach(s => s.classList.remove('a'));
+  document.getElementById(id)?.classList.add('a');
+}
+
+// Particles
+const c = document.getElementById('particles'), ctx = c.getContext('2d');
+let w, h, pts = [];
+function resize() { w = c.width = innerWidth; h = c.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+for (let i = 50; i--;) pts.push({
+  x: Math.random() * w, y: Math.random() * h,
+  vx: (Math.random() - .5) * 0.25, vy: (Math.random() - .5) * 0.25,
+  r: Math.random() * 1.5 + .5
+});
+function draw() {
+  ctx.clearRect(0, 0, w, h);
+  for (const p of pts) {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0 || p.x > w) p.vx *= -1;
+    if (p.y < 0 || p.y > h) p.vy *= -1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(129,140,248,${p.r * 0.2})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
