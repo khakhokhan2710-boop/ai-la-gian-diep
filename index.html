@@ -24,16 +24,20 @@
 </div>
 
 <!-- Online Lobby -->
-<div class="s" id="s8">
- <div class="flex-1"></div>
- <h2 class="tc">Chế Độ Online</h2>
+<div class="s" id="s8" style="overflow-y:auto">
+ <h2 class="tc" style="margin-top:20px">Chế Độ Online</h2>
  <p class="p tc">Nhập tên để bắt đầu</p>
  <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="20">
  <button class="btn pri" onclick="taoPhong()">Tạo Phòng Mới</button>
- <button class="btn sec" id="joinBtn" onclick="vaoPhong()">Vào Phòng</button>
+ <div style="margin:12px 0;padding:1px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08)">
+  <p style="font-size:12px;color:#666;text-align:center;margin:8px 0 4px">HOẶC VÀO PHÒNG CÓ SẴN</p>
+  <div id="roomList" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;padding:4px 0">
+   <div style="text-align:center;color:#555;font-size:13px;padding:12px">🔍 Đang tìm phòng...</div>
+  </div>
+ </div>
  <input class="inp" id="roomCodeInput" placeholder="Nhập mã phòng..." maxlength="10" style="margin-top:8px;text-align:center;letter-spacing:0.15em;font-size:18px">
- <button class="btn sec" onclick="hien('s0')" style="margin-top:20px">← Quay lại</button>
- <div class="flex-1"></div>
+ <button class="btn sec" id="joinBtn" onclick="vaoPhong()">Vào Phòng</button>
+ <button class="btn sec" onclick="hien('s0')" style="margin-top:12px;margin-bottom:20px">← Quay lại</button>
 </div>
 
 <!-- Name Entry (Offline) -->
@@ -390,7 +394,7 @@ fetch('word_pairs.json').then(function(r){return r.json()}).then(function(d){wp=
 function capNN(){return wp[Math.floor(Math.random()*wp.length)]}
 function randId(){return Math.random().toString(36).substr(2,8)+Date.now().toString(36)}
 function maPhongMoi(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='';for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r}
-function hien(id){var a=document.querySelectorAll('.s');for(var i=0;i<a.length;i++)a[i].classList.remove('a');document.getElementById(id).classList.add('a')}
+function hien(id){var a=document.querySelectorAll('.s');for(var i=0;i<a.length;i++)a[i].classList.remove('a');document.getElementById(id).classList.add('a');if(id==='s8')taiDanhSachPhong()}
 function xao(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 function demKh(obj){var n=0;for(var k in obj)n++;return n}
 function esc(s){return (s||'').replace(/[&<>]/g,'')}
@@ -491,6 +495,34 @@ function vaoPhong() {
     document.getElementById('waitTitle').textContent = '⏳ Đã vào phòng!';
     document.getElementById('waitSub').textContent = 'Chờ chủ phòng bắt đầu 3 phút...';
   });
+}
+
+// === DANH SÁCH PHÒNG ONLINE ===
+var roomListLis = null;
+function taiDanhSachPhong(){
+  if(roomListLis) db.ref('rooms').off('value', roomListLis);
+  roomListLis = db.ref('rooms').on('value', function(snap){
+    var list = document.getElementById('roomList');
+    if(!list) return;
+    var rooms = snap.val() || {};
+    var html = '';
+    for(var code in rooms){
+      var r = rooms[code];
+      if(!r || (r.status !== 'setup' && r.status !== 'naming')) continue;
+      var playerCount = 0; for(var k in (r.players||{})) playerCount++;
+      html += '<div class="room-item" onclick="vaoPhongTuList(\''+code+'\')" style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
+      html += '<div><div style="font-weight:700;font-size:15px">'+esc(r.hostName||'?')+'</div><div style="font-size:11px;color:#666">'+playerCount+' người</div></div>';
+      html += '<div style="font-size:13px;color:var(--purple);letter-spacing:0.1em;font-weight:600">'+code+'</div>';
+      html += '</div>';
+    }
+    if(!html) html = '<div style="text-align:center;color:#555;font-size:13px;padding:12px">😴 Chưa có phòng nào</div>';
+    list.innerHTML = html;
+  });
+}
+
+function vaoPhongTuList(code){
+  document.getElementById('roomCodeInput').value = code;
+  vaoPhong();
 }
 
 function langNghe() {
