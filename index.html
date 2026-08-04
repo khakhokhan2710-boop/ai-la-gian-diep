@@ -27,7 +27,7 @@
 <div class="s" id="s8" style="overflow-y:auto">
  <h2 class="tc" style="margin-top:20px">Chế Độ Online</h2>
  <p class="p tc">Nhập tên để bắt đầu</p>
- <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="20">
+ <input class="inp" id="nameInput" placeholder="Tên của bạn..." maxlength="30" autocomplete="off">
  <button class="btn pri" onclick="taoPhong()">Tạo Phòng Mới</button>
  <div style="margin:12px 0;padding:1px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08)">
   <p style="font-size:12px;color:#666;text-align:center;margin:8px 0 4px">HOẶC VÀO PHÒNG CÓ SẴN</p>
@@ -113,7 +113,7 @@
  <p class="p tc" id="waitSub">...</p>
  <div id="chatBox" style="flex:1;overflow-y:auto;padding:4px 0;display:none;min-height:0"></div>
  <div id="chatInputRow" style="display:none;gap:8px;margin-top:8px">
-  <input class="inp" id="chatInput" placeholder="Nhập key word..." maxlength="100" style="margin:0;flex:1">
+  <input class="inp" id="chatInput" placeholder="Nhập..." maxlength="200" style="margin:0;flex:1">
   <button class="btn pri" onclick="guiChat()" style="width:auto;padding:14px 20px;margin:0">Gửi</button>
  </div>
  <div style="display:flex;gap:8px;margin-top:8px">
@@ -508,7 +508,7 @@ function taiDanhSachPhong(){
     var html = '';
     for(var code in rooms){
       var r = rooms[code];
-      if(!r || (r.status !== 'setup' && r.status !== 'naming')) continue;
+      if(!r || r.status === 'setup' || r.status === 'naming' || r.status === 'gameover') continue;
       var playerCount = 0; for(var k in (r.players||{})) playerCount++;
       html += '<div class="room-item" onclick="vaoPhongTuList(\''+code+'\')" style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
       html += '<div><div style="font-weight:700;font-size:15px">'+esc(r.hostName||'?')+'</div><div style="font-size:11px;color:#666">'+playerCount+' người</div></div>';
