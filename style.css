@@ -340,6 +340,20 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
 }
 .btn.sec:active { background: rgba(255, 255, 255, 0.08); color: var(--text-3); transform: scale(0.97); }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.setup-hint {
+  min-height: 20px;
+  margin: 0 0 8px;
+  color: var(--text-3);
+  font-size: 13px;
+  text-align: center;
+}
+
 /* =====================================================
    NUMERIC ADJUSTER
    ===================================================== */
@@ -376,8 +390,8 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
    ===================================================== */
 
 .slot {
-  background: rgba(255, 255, 255, 0.04);
-  border: var(--border-softer);
+  background: rgba(13, 13, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-md);
   padding: 12px;
   text-align: center;
@@ -385,8 +399,8 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
 }
 
 .slot .lb {
-  font-size: 10px;
-  color: var(--text-7);
+  font-size: 11px;
+  color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -402,9 +416,9 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: var(--border-softer);
-  color: var(--text-4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-2);
   font-size: 13px;
   cursor: pointer;
   margin: 0 3px;
@@ -414,6 +428,11 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
   background: var(--gold-3f);
   border-color: var(--gold-3a);
   transform: scale(0.92);
+}
+
+@media (max-width: 360px) {
+  .slot { padding: 10px 6px; }
+  .slot .adj2 { margin: 0 2px; }
 }
 
 /* =====================================================
@@ -442,7 +461,6 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
   height: 380px;
   margin: 0 auto 16px;
   perspective: 1200px;
-  cursor: pointer;
   filter: drop-shadow(0 8px 30px rgba(0,0,0,0.5));
 }
 
@@ -471,6 +489,11 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
 
 /* Card Back — textured, with decorative frame */
 .card-bk {
+  width: 100%;
+  height: 100%;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
   background: var(--grad-card-bk);
   border: 1.5px solid var(--gold-3a);
   box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
@@ -501,7 +524,7 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
 .card-bk .lg { font-size: 56px; margin-bottom: 8px; }
 .card-bk .tp {
   font-size: 12px;
-  color: var(--text-7);
+  color: var(--text-4);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -655,8 +678,12 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
 
 .vote-item {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 10px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.03);
   border: 1.5px solid rgba(255, 255, 255, 0.06);
@@ -672,8 +699,36 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-3); }
   transform: scale(0.98);
 }
 
+.vote-item.selected {
+  border-color: var(--gold);
+  background: var(--gold-bg);
+}
+
+.vote-item:disabled { cursor: default; }
+
 .vote-item .v-name  { flex: 1; font-weight: 600; font-size: 15px; color: var(--text-3); }
 .vote-item .v-count { font-size: 12px; color: var(--text-7); }
+
+.guess-panel {
+  width: 100%;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(13, 13, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: var(--shadow-card);
+}
+
+.game-btn:focus-visible,
+.btn:focus-visible,
+.adj2:focus-visible,
+.exit-btn:focus-visible,
+.gear-btn:focus-visible,
+.vote-item:focus-visible,
+.card-bk:focus-visible,
+.card-ft:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 3px;
+}
 
 /* =====================================================
    CHAT

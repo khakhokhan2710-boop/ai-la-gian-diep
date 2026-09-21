@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI LÀ GIÁN ĐIỆP</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -74,7 +74,8 @@
  </div>
  <button class="btn sec" id="blindBtn" onclick="toggleBlind()" style="width:100%;padding:14px;margin:6px 0;font-size:15px;text-align:center">Ẩn vai trò: TẮT</button>
  <div style="flex:0;min-height:10px"></div>
- <button class="btn pri" onclick="batDau()">Bắt đầu</button>
+ <button class="btn pri" id="startBtn" onclick="batDau()" aria-describedby="startHint">Bắt đầu</button>
+ <p class="setup-hint" id="startHint" role="status" aria-live="polite"></p>
  <button class="btn sec" onclick="roiPhong()">Rời phòng</button>
 </div>
 
@@ -84,15 +85,15 @@
  <button class="gear-btn" onclick="openSettings()">⚙</button>
  <div id="thuTuBai" style="font-size:28px;font-weight:900;color:var(--gold);padding:12px 0">Người 1/8</div>
  <div class="flex-1"></div>
- <div class="card" onclick="latBai()">
+ <div class="card">
   <div class="card-in" id="cardIn">
-   <div class="card-face card-bk"><div class="lg">🕵️</div><div class="tp">Chạm để xem</div></div>
-   <div class="card-face card-ft">
+   <button type="button" class="card-face card-bk" id="cardRevealBtn" onclick="latBai()" aria-label="Chạm hoặc nhấn Enter để xem vai trò"><span class="lg" aria-hidden="true">🕵️</span><span class="tp">Chạm để xem</span></button>
+   <div class="card-face card-ft" id="cardFront" tabindex="-1" aria-hidden="true">
     <div class="rl" id="vaiLabel">Vai trò</div>
     <div class="rn" id="vaiText">—</div>
     <div class="sw" id="tuText" style="display:none">—</div>
     <div class="p" id="goiYText"></div>
-    <button class="btn sec" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px">Đã xong</button>
+    <button class="btn sec" id="cardDoneBtn" onclick="daXong(event)" style="width:auto;padding:10px 28px;margin-top:8px" disabled>Đã xong</button>
    </div>
   </div>
  </div>
@@ -150,12 +151,14 @@
 <div class="s tc" id="s6" style="position:relative">
  <button class="exit-btn" onclick="roiPhong()">✕</button>
  <div class="flex-1"></div>
- <h3>Mũ Trắng — Đoán từ!</h3>
- <p class="p" style="font-size:13px;color:#f87171">Sai hoặc hết giờ là bị loại ngay</p>
- <p style="color:var(--purple);font-size:16px;font-weight:600" id="goiYDoan">—</p>
- <div id="guessTimer" style="font-size:36px;font-weight:900;color:#f87171;margin:8px 0">20</div>
- <input class="inp" id="doanInput" placeholder="Nhập từ khóa chính xác..." maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guiDoan()">
- <button class="btn pri" onclick="guiDoan()" id="guessBtn">Đoán</button>
+ <div class="guess-panel">
+  <h3>Mũ Trắng — Đoán từ!</h3>
+  <p class="p" style="font-size:13px;color:#f87171">Sai hoặc hết giờ là bị loại ngay</p>
+  <p style="color:var(--purple);font-size:16px;font-weight:600" id="goiYDoan">—</p>
+  <div id="guessTimer" style="font-size:36px;font-weight:900;color:#f87171;margin:8px 0">20</div>
+  <input class="inp" id="doanInput" placeholder="Nhập từ khóa chính xác..." maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')guiDoan()">
+  <button class="btn pri" onclick="guiDoan()" id="guessBtn">Đoán</button>
+ </div>
  <div class="flex-1"></div>
 </div>
 
@@ -549,6 +552,12 @@ function capNhatUI() {
   document.getElementById('numDan').textContent = total - sp - wh;
   document.getElementById('numSpy').textContent = sp;
   document.getElementById('numHat').textContent = wh;
+  var startBtn = document.getElementById('startBtn');
+  var startHint = document.getElementById('startHint');
+  if(total < 2) startHint.textContent = 'Cần ít nhất 2 người để bắt đầu.';
+  else if(sp + wh >= total) startHint.textContent = 'Cần ít nhất 1 Dân làng để bắt đầu.';
+  else startHint.textContent = '';
+  startBtn.disabled = !!startHint.textContent;
   var arr = [];
   for(var k in pl) arr.push('<span class="chip">'+esc(pl[k].name)+' <span onclick="xoaNguoi(\''+k+'\')" style="cursor:pointer;color:#f87171;font-weight:700;margin-left:4px">✕</span></span>');
   document.getElementById('playerListSetup').innerHTML = arr.join('')||'<span style="color:#444;font-size:13px">Chưa có ai</span>';
@@ -662,8 +671,9 @@ function batDau() {
   pendingSpies = null; pendingHats = null;
   gs._whiteHatGuessed = false;
   var g = gs;
-  if((g.spies||0)+(g.whiteHats||0)>=(demKh(g.players||{}))){alert('Quá nhiều gián điệp/mũ trắng!');return}
-  if(!isOffline && demKh(g.players||{})<2){alert('Cần ít nhất 2 người!');return}
+  var playerCount = demKh(g.players||{});
+  if(playerCount<2){alert('Cần ít nhất 2 người!');return}
+  if((g.spies||0)+(g.whiteHats||0)>=playerCount){alert('Cần ít nhất 1 Dân làng!');return}
   // Offline: auto-generate players based on total
   if(isOffline) {
     // Use the player list set up in UI
@@ -721,6 +731,10 @@ function xuLyRutBai() {
       currentCardPlayer = {id: viewId, a: a, idx: idx, pid: pid};
       // Clear card content completely before showing
       document.getElementById('cardIn').classList.remove('f');
+      document.getElementById('cardRevealBtn').disabled = false;
+      document.getElementById('cardRevealBtn').setAttribute('aria-hidden', 'false');
+      document.getElementById('cardFront').setAttribute('aria-hidden', 'true');
+      document.getElementById('cardDoneBtn').disabled = true;
       document.getElementById('vaiLabel').textContent = '⚠️';
       document.getElementById('vaiText').textContent = '???';
       document.getElementById('vaiText').className = 'rn';
@@ -728,6 +742,7 @@ function xuLyRutBai() {
       document.getElementById('goiYText').textContent = '';
       document.getElementById('thuTuBai').textContent = 'Người '+(idx+1)+'/'+to.length+' - '+g.players[pid].name;
       hien('s2');
+      document.getElementById('cardRevealBtn').focus();
     } else {
       hien('s3'); document.getElementById('waitTitle').textContent='✅ Đã xem rồi!';document.getElementById('waitSub').textContent='Chờ...';
     }
@@ -756,6 +771,11 @@ function latBai(){
   else tw.style.display='none';
   document.getElementById('goiYText').textContent = a.hint ? 'Gợi ý: '+a.hint : '';
   document.getElementById('cardIn').classList.add('f');
+  document.getElementById('cardRevealBtn').disabled = true;
+  document.getElementById('cardRevealBtn').setAttribute('aria-hidden', 'true');
+  document.getElementById('cardFront').setAttribute('aria-hidden', 'false');
+  document.getElementById('cardDoneBtn').disabled = false;
+  document.getElementById('cardFront').focus();
 }
 function daXong(e){e.stopPropagation();
   var g=gs, to=g.turnOrder||[], cur=g.currentTurn||0, pid=(isOffline?(to[cur]||myId):myId);
@@ -1028,9 +1048,15 @@ function xuLyVote(){
     var pid=al[i],p=g.players[pid];if(!p)continue;
     var vf=0, aiVote=[];
     for(var vk in v){if(v[vk]===pid){vf++;aiVote.push(g.players[vk]?g.players[vk].name:'?')}}
-    var d=document.createElement('div');
+    var d=document.createElement('button');
+    d.type = 'button';
     d.className = 'vote-item';
     d.setAttribute('data-pid', pid);
+    d.setAttribute('aria-label', (isOffline ? 'Loại ' : 'Bỏ phiếu cho ') + p.name + (isOffline ? '' : ', ' + vf + ' phiếu'));
+    if(!isOffline) {
+      d.setAttribute('aria-pressed', 'false');
+      d.disabled = !!v[myId];
+    }
     d.innerHTML =
       '<span class="v-name">'+esc(p.name)+'</span>' +
       '<span class="v-count">'+(vf>0?'<b>'+vf+'</b> phiếu':'0')+'</span>' +
@@ -1049,8 +1075,8 @@ function xuLyVote(){
         return;
       }
       if(v[myId]) return;
-      var sl=document.querySelectorAll('.vote-item');for(var x=0;x<sl.length;x++)sl[x].classList.remove('selected');
-      this.classList.add('selected');binhChon=p2;document.getElementById('voteBtn').disabled=false;
+      var sl=document.querySelectorAll('.vote-item');for(var x=0;x<sl.length;x++){sl[x].classList.remove('selected');sl[x].setAttribute('aria-pressed','false')}
+      this.classList.add('selected');this.setAttribute('aria-pressed','true');binhChon=p2;document.getElementById('voteBtn').disabled=false;
     }})(pid);
     list.appendChild(d);
   }
@@ -1220,7 +1246,7 @@ function roiPhong(){
   localStorage.removeItem('lastRoom'); localStorage.removeItem('lastName');
   pendingSpies = null; pendingHats = null;
   if(guessTimerInterval) { clearInterval(guessTimerInterval); guessTimerInterval = null; }
-  document.getElementById('nameInput').value='';document.getElementById('maPhongInput').value='';
+  document.getElementById('nameInput').value='';document.getElementById('roomCodeInput').value='';
   document.getElementById('doanInput').value='';
   hien('s0');
 }
@@ -1234,7 +1260,6 @@ setInterval(function(){
   if(all&&(g.currentTurn||0)>=to.length) ghiChild('phase','draw_done');
 },2000);
 </script>
-<script src="agentation-bundle.js"></script>
 
 <script>
 // Particle animation
